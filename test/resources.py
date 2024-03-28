@@ -17,18 +17,20 @@ class Resources:
            (these are dictionaries, corpora, etc. used for development but not used for regression tests)
     """
     # small example projects in package
-    RESOURCES_DIR = Path(Path(__file__).parent.parent, "pyamihtmlx", "resources")
+    RESOURCES_DIR = Path(Path(__file__).parent.parent, "amiclimate", "resources")
     assert RESOURCES_DIR.name == "resources", f"{RESOURCES_DIR.name} should be 'resources'"
 
     # test data (often snipped form large projects
     TEST_RESOURCES_DIR = Path(Path(__file__).parent, "resources")
     assert TEST_RESOURCES_DIR.name == "resources", f"{TEST_RESOURCES_DIR.name} should be 'resources'"
+    Path(TEST_RESOURCES_DIR).mkdir(parents=True, exist_ok=True)
     assert TEST_RESOURCES_DIR.exists(), f"dir exists {TEST_RESOURCES_DIR}"
     assert TEST_RESOURCES_DIR.is_dir(), f"file exists {TEST_RESOURCES_DIR}"
 
     # svg test data
     CLIMATE_10_PROJ = "climate10_proj"
     TEST_CLIMATE_10_PROJ_DIR = Path(TEST_RESOURCES_DIR, CLIMATE_10_PROJ)
+    Path(TEST_CLIMATE_10_PROJ_DIR).mkdir(parents=True, exist_ok=True)
     assert TEST_CLIMATE_10_PROJ_DIR.exists()
     TEST_CLIMATE_10_SVG_DIR = Path(TEST_CLIMATE_10_PROJ_DIR, "climate10", "svg")
 
@@ -55,7 +57,7 @@ class Resources:
     #         assert LOCAL_IPCC_CHAP07_MAN_DICT.exists(), f"no dict {LOCAL_IPCC_CHAP07_MAN_DICT}"
 
     TEST_IPCC_CHAP02 = Path(TEST_IPCC_DIR, "Chapter02")
-    assert TEST_IPCC_CHAP02.exists()
+    assert TEST_IPCC_CHAP02.exists(), f"{TEST_IPCC_CHAP02} should exist"
     TEST_IPCC_CHAP02_DICT = Path(TEST_IPCC_CHAP02, "dict")
     assert TEST_IPCC_CHAP02_DICT.exists()
     TEST_IPCC_CHAP02_ABB_DICT = Path(TEST_IPCC_CHAP02_DICT, "ip_3_2_emissions_abb.xml")
@@ -104,7 +106,7 @@ class Resources:
 
     # pdfs
     TEST_PDFS_DIR = Path(TEST_RESOURCES_DIR, "pdfs")
-    assert TEST_PDFS_DIR.exists()
+    assert TEST_PDFS_DIR.exists(), f"{TEST_PDFS_DIR} should exist"
 
     # TEST_IPCC_WG2 = Path(TEST_IPCC_DIR, "wg2")
     TEST_IPCC_WG2_CHAP03 = Path(TEST_IPCC_DIR, "wg2_03")

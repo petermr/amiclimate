@@ -1,6 +1,5 @@
 import argparse
 import ast
-import glob
 import logging
 import os
 import pprint
@@ -16,14 +15,14 @@ import lxml.etree as etree
 # local
 # from pyamihtmlx.dict_lib import AmiDictionary
 
-from pyamihtmlx.ami_pdf import PDFArgs
-from pyamihtmlx.ami_html import HTMLArgs
-from pyamihtmlx.file_lib import FileLib
-from pyamihtmlx.ipcc import IPCCArgs
-from pyamihtmlx.un import UNFCCCArgs
-from pyamihtmlx.util import AmiLogger, Util
-from pyamihtmlx.wikimedia import WikidataLookup
-from pyamihtmlx.xml_lib import XmlLib
+from amilibx.ami_pdf import PDFArgs
+from amilibx.ami_html import HTMLArgs
+from amilibx.file_lib import FileLib
+from climate.ipcc import IPCCArgs
+from climate.un import UNFCCCArgs
+from amilibx.util import AmiLogger, Util
+from amilibx.wikimedia import WikidataLookup
+from amilibx.xml_lib import XmlLib
 
 AMIX_DIR = Path(__file__).parent
 REPO_DIR = AMIX_DIR.parent

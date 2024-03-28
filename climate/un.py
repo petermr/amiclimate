@@ -10,13 +10,15 @@ from pathlib import Path
 
 import lxml
 import lxml.etree as ET
+from amilibx.ami_html import HtmlUtil
 from lxml.etree import _Element, _ElementUnicodeResult
 from lxml.html import HTMLParser, HtmlComment
-# from amilibx.ami_html import HtmlUtil
-from amilibx.file_lib import FileLib, AmiDriver
-# from pyamihtmlx.html_marker import HtmlPipeline
+from amilibx.file_lib import FileLib
+from amilibx.amidriver import AmiDriver
 from amilibx.util import AbstractArgs
 from amilibx.xml_lib import HtmlLib, XmlLib
+
+import climate
 
 LR = "longer-report"
 SPM = "summary-for-policymakers"
@@ -968,7 +970,7 @@ class IPCC:
     @classmethod
     def download_save_chapter(self, report, chap, wg_url, outdir=None, sleep=2):
         ami_driver = AmiDriver(sleep=sleep)
-        web_publisher_classname = pyamihtmlx.ipcc.IPCCPublisherTool.get_web_publisher_classname(report)
+        web_publisher_classname = climate.ipcc.IPCCPublisherTool.get_web_publisher_classname(report)
         if not web_publisher_classname:
             print(f"Cannot find web_publisher from {report}")
             return
