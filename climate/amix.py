@@ -240,17 +240,19 @@ class AMIClimate:
 
     def commandline(self, commandline: str) -> None:
         """runs a commandline as a single string
+        return: space-concatenated args
         """
         if not commandline:
-            self.run_command(["--help"])
+            return self.run_command(["--help"])
         else:
             arglist = commandline.split(" ")
-            self.run_command(arglist)
+            return self.run_command(arglist)
 
     def run_commands(self, arglistlist):
         """runs a list of commands
 
         :param arglistlist:  A list of commands (which are usually lists)
+        :return: list of argstrings
 
         for each list element uses run_command
         This allows for setup, assertions, etc.
@@ -258,15 +260,18 @@ class AMIClimate:
         typical example:
         self.run_commands
         """
+        argstrlist = []
         if arglistlist is not None and isinstance(arglistlist, list):
             for arglist in arglistlist:
-                self.run_command(arglist)
+                argstr = self.run_command(arglist)
+                argstrlist.append(argstr)
+        return argstrlist
 
-    def run_command(self, args):
+    def run_command(self, args, debug=True):
         """parses cmdline, runs command and outputs symbols
 
         :param args: either a string or a list of strings
-
+        :return: space-concatenated args
         if args is a string we split it at spaces into a list of strings
 
         """
@@ -277,9 +282,10 @@ class AMIClimate:
         print(f"command: {args}")
         self.logger.debug(f"********** raw arglist {args}")
         test_catch = False
+        argstr = None
         if test_catch:  # try to trap exception
             try:
-                self.parse_and_run_args(args)
+                argstr = self.parse_and_run_args(args)
             except Exception as e:
                 print(f"ERROR {e.args} from {args}")
                 logging.error(f"\n============PARSE ERROR==({e.__cause__})======\n")
@@ -287,15 +293,16 @@ class AMIClimate:
             if self.is_flag_true(self.PRINT_SYMBOLS):
                 self.symbol_ini.print_symbols()
         else:
-            self.parse_and_run_args(args)
-
-        return
+            argstr = self.parse_and_run_args(args)
+        if debug:
+            print(f"argstr: {argstr}")
+        return argstr
 
     def parse_and_run_args(self, arglist, debug=False):
         """runs cmds and makes substitutions (${...} then runs workflow
 
         :param arglist: 
-
+        :return: space-concatenated args
         """
         # no args, create help
         if not arglist:
@@ -310,7 +317,7 @@ class AMIClimate:
         self.add_single_str_to_list()
         self.logger.debug("ARGS after substitution: " + str(self.args))
         self.set_loglevel_from_args()
-        self.run_arguments()
+        argstr = self.run_arguments()
 
     def substitute_args(self):
         """ iterates through self.args and makes subsitutions
@@ -336,7 +343,8 @@ class AMIClimate:
             self.logger.debug(f"args => {self.args}")
 
     def run_arguments(self):
-        """ parse and expland arguments then ru options for
+        """
+        parse and expland arguments in self.args then ru options for
 
         Currently:
         * examples
@@ -367,6 +375,7 @@ class AMIClimate:
             abstract_args.parse_and_process1(self.args)
         else:
             self.run_core_mathods()
+        return " ".join(self.args)
 
     def run_core_mathods(self):
         logging.debug(f"run_core")
