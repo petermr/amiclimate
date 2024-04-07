@@ -15,14 +15,14 @@ import lxml.etree as etree
 # local
 # from pyamihtmlx.dict_lib import AmiDictionary
 
-from amilibx.ami_pdf import PDFArgs
-from amilibx.ami_html import HTMLArgs
-from amilibx.file_lib import FileLib
+from amilib.pdf_args import PDFArgs
+from amilib.html_args import HTMLArgs
+from amilib.file_lib import FileLib
 from climate.ipcc import IPCCArgs
 from climate.un import UNFCCCArgs
-from amilibx.util import AmiLogger, Util
-from amilibx.wikimedia import WikidataLookup
-from amilibx.xml_lib import XmlLib
+from amilib.util import AmiLogger, Util
+from amilib.wikimedia import WikidataLookup
+from amilib.xml_lib import XmlLib
 
 AMIX_DIR = Path(__file__).parent
 REPO_DIR = AMIX_DIR.parent

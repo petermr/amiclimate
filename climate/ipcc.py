@@ -9,25 +9,17 @@ from collections import defaultdict, Counter
 from io import BytesIO
 from pathlib import Path
 #
-# import lxml
 import lxml.etree as ET
+from amilib.file_lib import FileLib
+from amilib.util import AbstractArgs, Util
+from amilib.xml_lib import HtmlLib, XmlLib
+from lxml.html import HTMLParser
 import pandas as pd
 import requests
-# from lxml.etree import _Element
-# from lxml.html import HTMLParser
 #
-from amilibx.ami_html import URLCache, HtmlUtil, H_DIV, H_A, HtmlStyle, A_NAME, A_CLASS, A_ID, A_STYLE, H_SPAN
+from amilib.ami_html import URLCache, HtmlUtil, H_DIV, H_A, HtmlStyle, A_NAME, A_CLASS, A_ID, A_STYLE, H_SPAN
 # from pyamihtmlx.ami_integrate import HtmlGenerator
-from amilibx.ami_html import HtmlStyle
-from amilibx.file_lib import FileLib
 from climate.un import IPCC, GATSBY, DE_GATSBY, WORDPRESS, DE_WORDPRESS, GATSBY_RAW, WORDPRESS_RAW, SPM, TS, LR, AR6_URL
-# from pyamihtmlx.util import AbstractArgs, Util
-# from pyamihtmlx.xml_lib import HtmlLib, XmlLib
-# from test.resources import Resources
-from amilibx.html_generator import HtmlGenerator
-from amilibx.util import Util, AbstractArgs
-from amilibx.xml_lib import HtmlLib, XmlLib
-from lxml.html import HTMLParser
 
 from test.resources import Resources
 
@@ -169,6 +161,7 @@ class IPCCCommand:
 
     @classmethod
     def save_args_to_global(cls, kwargs_dict, overwrite=False):
+        return None
         from pyamihtmlx.ami_config import doc_info
 
         for key, value in kwargs_dict.items():
@@ -1032,7 +1025,7 @@ class IPCCChapter:
                 error = response
             else:
                 # print (f"response code {response.status_code}")
-                html_elem = ET.fromstring(response.content)
+                html_elem = ET.fromstring(response.content, HTMLParser())
                 assert html_elem is not None
         else:
             return (None, "no file or url given")
@@ -1242,9 +1235,9 @@ class IPCCPublisherTool(ABC):
         report = report.lower()
         # MAPPING = {c.lookup: c for c in WebPublisherTool.__subclasses__()}
         if report in {"sr15", "srocc", "srccl"}:
-            name = "pyamihtmlx.ipcc.IPCCWordpress"
+            name = "climate.ipcc.IPCCWordpress"
         if report in {"wg1", "wg2", "wg3", "syr"}:
-            name = "pyamihtmlx.ipcc.IPCCGatsby"
+            name = "climate.ipcc.IPCCGatsby"
         clazz = Util.get_class_from_name(name)
         return clazz
 
