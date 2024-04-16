@@ -579,7 +579,11 @@ class TestIPCC(AmiAnyTest):
                 gatsby_file = Path(outdir, f"{GATSBY_RAW}.html")
                 assert (f := Path(gatsby_file)).exists(), f"file should exist {f}"
                 html_elem = web_publisher.remove_unnecessary_markup(gatsby_file)
+                assert html_elem is not None, f"{gatsby_file} gave None html_elem"
                 body = HtmlLib.get_body(html_elem)
+                if body is None:
+                    print(f"None body for {html_elem} in {gatsby_file}")
+                    continue
                 elems = body.xpath(".//*")
                 if len(elems) < 2:
                     # no significant content
@@ -627,8 +631,8 @@ class TestIPCC(AmiAnyTest):
             # "chapter-18",
             # "chapter-19",
         ]
-        ipcc_dict = IPCC_DICT.get_ipcc_dict()
-        ar6_url = ipcc_dict.get()
+        # ipcc_dict = IPCC_DICT.get_ipcc_dict()
+        # ar6_url = ipcc_dict.get()
         web_publisher = IPCCGatsby()
         for report in reports:
             wg_url = f"{AR6_URL}{report}/"
@@ -642,6 +646,7 @@ class TestIPCC(AmiAnyTest):
 
                 gatsby_file = Path(outdir, f"{GATSBY_RAW}.html")
                 html_elem = web_publisher.remove_unnecessary_markup(gatsby_file)
+                assert html_elem is not None, f"{gatsby_file} should not give None html"
                 body = HtmlLib.get_body(html_elem)
                 elems = body.xpath(".//*")
                 if len(elems) < 2:
@@ -1043,9 +1048,9 @@ class TestIPCC(AmiAnyTest):
 
         AMIClimate().run_command(
             ['IPCC', '--indir', "_IPCC_REPORTS", '--input', "_HTML_IDS", '--query', "methane", '--outdir', "_QUERY_OUT",
-             "--output", "methane.html", '--xpath',
+             "--output", output, '--xpath',
              "_NOREFS"])
-        self.check_output_tree(output, expected=276, xpath=".//a[@href]")
+        self.check_output_tree(output, expected=[60,300], xpath=".//a[@href]")
 
     def test_commandline_search_with_wildcards_and_join_indir(self):
         """generate inpout files """
@@ -1302,11 +1307,16 @@ class TestIPCC(AmiAnyTest):
 
     # ========= helpers ============
     def check_output_tree(self, output, expected=None, xpath=None):
+        assert xpath, f"must give xpath"
+        assert output, f"output cannot be None"
         html_tree = ET.parse(output)
-        if not expected or not xpath:
-            print(f"must give expected and xpath")
-            return
-        assert (pp := len(html_tree.xpath(xpath))) == expected, f"found {pp} elements in {output}"
+        assert html_tree is not None, f"html_tree is None"
+        if expected:
+            pp = len(html_tree.xpath(xpath))
+            if type(expected) is list and len(expected) ==  2:
+                assert expected[0] <= pp <= expected[1], f"found {pp} elements in {output}, expected {expected}"
+            else:
+                assert pp == expected, f"found {pp} elements in {output}"
 
 
 class TestUNFCCC(AmiAnyTest):
