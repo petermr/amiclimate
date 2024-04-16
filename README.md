@@ -10,6 +10,9 @@ This requires bespoke library routines and these are available in a new `amilib`
 
 This repository will NOT have the complete IPCC or UNFCCC corpus , but will have small exemplars.
 
+# tests
+Applications are developed as tests, and then factored into command
+
 
 
 
