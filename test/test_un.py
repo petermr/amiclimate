@@ -920,7 +920,7 @@ class TestIPCC(AmiAnyTest):
             labels = ["para_id", query, "para_text"]
             outcsv = Path(LibTemp.get_query_dir(), f"{query}.csv")
             print(f"CSV file {outcsv}")
-            LibTemp.build_list_dict(labels, outcsv, outfile)
+            LibTemp.build_list_dict(labels, outcsv, outfile, corpus=ipcc_dir)
 
     def test_analyse_countries(self):
         """takes """
