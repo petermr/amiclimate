@@ -16,7 +16,6 @@ import lxml.etree as etree
 # from pyamihtmlx.dict_lib import AmiDictionary
 
 from amilib.pdf_args import PDFArgs
-from amilib.html_args import HTMLArgs
 from amilib.file_lib import FileLib
 from climate.ipcc import IPCCArgs
 from climate.un import UNFCCCArgs
@@ -225,9 +224,9 @@ class AMIClimate:
         for choice in subparsers.choices:
             print(f">>> {choice}")
 
-        html_parser = HTMLArgs().make_sub_parser(subparsers)
+        # html_parser = HTMLArgs().make_sub_parser(subparsers)
         ipcc_parser = IPCCArgs().make_sub_parser(subparsers)
-        pdf_parser = PDFArgs().make_sub_parser(subparsers)
+        # pdf_parser = PDFArgs().make_sub_parser(subparsers)
         unfccc_parser = UNFCCCArgs().make_sub_parser(subparsers)
 
         parser.epilog = "other entry points run as 'python -m pyamihtmlx.ami_dict args' also ami_pdf, ami_project"
@@ -364,9 +363,9 @@ class AMIClimate:
         subparser_dict = {
             # "DICT": AmiDictArgs(),
             # "GUI":  GUIArgs(),
-            "HTML": HTMLArgs(),
+            # "HTML": HTMLArgs(),
             "IPCC": IPCCArgs(),
-            "PDF": PDFArgs(),
+            # "PDF": PDFArgs(),
             "UNFCCC": UNFCCCArgs(),
         }
         abstract_args = subparser_dict.get(subparser_type)

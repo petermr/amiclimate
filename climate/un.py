@@ -671,6 +671,7 @@ CURLY_RE = ".*\\{(?P<links>.+)\\}.*" # any matched non-empty curlies {...}
 class IPCC:
     """superclass of Gatsby and Wordpress
     """
+    # TODO move to Html
     # styles for sections of IPCC chapters
     @classmethod
     def add_styles_to_head(cls, head):
@@ -817,10 +818,12 @@ class IPCC:
                     hit_dict[hit].append(url)
 
     @classmethod
-    def create_hit_html(cls, infiles, phrases=None, outfile=None, xpath=None, debug=False):
+    def search_inputfiles_with_phrases_into_html_tree_and_file(cls, infiles, phrases=None, outfile=None, xpath=None, omit=None, debug=False):
         all_paras = []
         all_dict = dict()
         hit_dict = defaultdict(list)
+        if not omit:
+            omit = ".*#references_.*"
         if type(phrases) is not list:
             phrases = [phrases]
         for infile in infiles:
@@ -831,6 +834,7 @@ class IPCC:
 
             # this does the search
             para_phrase_dict = HtmlLib.create_para_ohrase_dict(paras, phrases)
+            print(f"{para_phrase_dict}")
             if len(para_phrase_dict) > 0:
                 if debug:
                     print(f"para_phrase_dict {para_phrase_dict}")
@@ -839,7 +843,8 @@ class IPCC:
             print(f"para count~: {len(all_paras)}")
         outfile = Path(outfile)
         outfile.parent.mkdir(exist_ok=True, parents=True)
-        html1 = cls.create_html_from_hit_dict(hit_dict)
+        print(f"keys: {hit_dict.keys()}")
+        html1 = cls.create_html_from_hit_dict(hit_dict, omit=omit)
         if outfile:
             with open(outfile, "w") as f:
                 if debug:
@@ -848,7 +853,7 @@ class IPCC:
         return html1
 
     @classmethod
-    def create_html_from_hit_dict(cls, hit_dict):
+    def create_html_from_hit_dict(cls, hit_dict, omit=None):
         html = HtmlLib.create_html_with_empty_head_body()
         body = HtmlLib.get_body(html)
         ul = ET.SubElement(body, "ul")
@@ -858,6 +863,10 @@ class IPCC:
             p.text = term
             ul1 = ET.SubElement(li, "ul")
             for hit in hits:
+                if omit:
+                    match = re.match(omit, hit)
+                    if match:
+                        continue # skip
                 # TODO manage hits with Paths
                 # on windows some hits have "%5C' instead of "/"
                 hit = str(hit).replace("%5C", "/")

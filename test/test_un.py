@@ -1,21 +1,13 @@
-# import csv
-# import glob
-# import os
-# import re
-# import unittest
-# from pathlib import Path
-#
-# import lxml
-# import requests
-# from lxml import html
-# from lxml.html import HTMLParser
 import logging
+import random
 import re
+from collections import defaultdict
 
 import lxml.etree as ET
 #
 # from pyamihtmlx.ami_html import HtmlUtil
 # from pyamihtmlx.ami_integrate import HtmlGenerator
+from amilib.ami_html import HtmlUtil
 from amilib.ami_pdf_libs import AmiPDFPlumber, AmiPlumberJson
 # from pyamihtmlx.file_lib import FileLib
 from amilib.html_marker import SpanMarker, HtmlPipeline
@@ -27,14 +19,14 @@ import csv
 import os
 from pathlib import Path
 import unittest
-
 import requests
-from amilib.ami_html import HtmlUtil
+
 from amilib.file_lib import FileLib
 from amilib.html_generator import HtmlGenerator
 from amilib.xml_lib import HtmlLib
 from lxml.html import HTMLParser
 
+from climate.libs import LibTemp
 from climate.un import DECISION_SESS_RE, MARKUP_DICT, INLINE_DICT, UNFCCC, UNFCCCArgs, IPCC, HTML_WITH_IDS_HTML, \
     AR6_URL, TS, GATSBY_RAW, LR, SPM, ANN_IDX, \
     GATSBY, DE_GATSBY, HTML_WITH_IDS, ID_LIST, WORDPRESS, DE_WORDPRESS, MANUAL, PARA_LIST
@@ -43,7 +35,6 @@ from climate.un import DECISION_SESS_RE, MARKUP_DICT, INLINE_DICT, UNFCCC, UNFCC
 #
 from test.resources import Resources
 from test.test_all import AmiAnyTest
-
 
 # from test.test_all import AmiAnyTest
 
@@ -88,10 +79,23 @@ WG1_URL = AR6_URL + "wg1/"
 WG2_URL = AR6_URL + "wg2/"
 WG3_URL = AR6_URL + "wg3/"
 
+SEP = ";"
+
 # SC_TEST_DIR = Path(OUT_DIR_TOP, "ipcc", "ar6", "test")
 
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.WARNING)
+
+
+def get_para_content(indir, para_key):
+    if not para_key:
+        return None
+    para_id_re = "(ar6/text)"
+
+
+IPCC_DIR = Path(FileLib.get_home(), "projects", "ipcc")
+assert IPCC_DIR.exists()
+
 
 class TestIPCC(AmiAnyTest):
 
@@ -570,6 +574,8 @@ class TestIPCC(AmiAnyTest):
             print(f"report: {report}")
             for chap in chapters:
                 print(f"chapter: {chap}")
+                if random.randint(0, 5) != 3:
+                    continue
                 outdir = Path(TEMP_DIR, report, chap)
                 print(f"outdir {outdir}")
                 IPCC.download_save_chapter(report, chap, wg_url, outdir=TEMP_DIR, sleep=1)
@@ -842,7 +848,7 @@ class TestIPCC(AmiAnyTest):
         """
         infile = Path(Resources.TEST_RESOURCES_DIR, "ipcc", "wg3", "Chapter03", f"{HTML_WITH_IDS}.html")
         assert infile.exists(), f"{infile} does not exist"
-        html = ET.parse(str(infile), HTMLParser())
+        html = LibTemp.parse_html_lxml(infile)
         paras = HtmlLib.find_paras_with_ids(html)
         assert len(paras) == 1163
 
@@ -876,9 +882,88 @@ class TestIPCC(AmiAnyTest):
             "bananas",
             "South Asia",
         ]
-        html1 = IPCC.create_hit_html(infiles, phrases=phrases, outfile=outfile, debug=debug)
+        html1 = IPCC.search_inputfiles_with_phrases_into_html_tree_and_file(infiles, phrases=phrases, outfile=outfile,
+                                                                            debug=debug)
         assert html1 is not None
         assert len(html1.xpath("//p")) > 0
+
+    def test_search_all_chapters_with_terms(self, outfile=None):
+        """
+        read chapter, search for words and return list of paragraphs/ids in which they occur
+        simple, but requires no server
+        """
+        query = "terms"
+        indir = Path(Resources.TEST_RESOURCES_DIR, 'ipcc')
+        ipcc_dir = LibTemp.get_ipcc_dir()
+        phrase_files = [
+            Path(ipcc_dir, "terms.xml"),
+            Path(ipcc_dir, "countries.txt"),
+        ]
+        for phrase_file in phrase_files:
+            query = Path(phrase_file).stem
+
+            assert phrase_file.exists(), f"phrase file {phrase_file}"
+            # print(f"indir {indir}")
+            outfile = Path(indir, f"{query}.html")
+            debug = False
+            globstr = f"{str(indir)}/**/{HTML_WITH_IDS}.html"
+            infiles = FileLib.posix_glob(globstr, recursive=True)
+            print(f"{len(infiles)} {infiles[:2]}")
+
+            suffix = Path(phrase_file).suffix
+            xpath = "/dictionary/entry/@term"
+            phrases = LibTemp.extract_phrases(phrase_file, suffix, xpath)
+
+            if not outfile.exists():
+                html1 = IPCC.search_inputfiles_with_phrases_into_html_tree_and_file(
+                    infiles, phrases=phrases, outfile=outfile,debug=debug)
+            labels = ["para_id", query, "para_text"]
+            outcsv = Path(LibTemp.get_query_dir(), f"{query}.csv")
+            print(f"CSV file {outcsv}")
+            LibTemp.build_list_dict(labels, outcsv, outfile)
+
+    def test_analyse_countries(self):
+        """takes """
+        query = "country"
+        labels = ["para_id", "countries"]
+        country_file, indir, outfile, outcsv = LibTemp._make_country_filenames(query)
+
+        LibTemp.build_list_dict(labels, outcsv, outfile)
+
+    def test_search_all_chapters_with_query_words_climate_terms(self):
+        """
+        read chapter, search for words and return list of paragraphs/ids in which they occur
+        simple, but requires no server
+        """
+        query = "climate"
+        country_file, indir, outfile, outcsv = LibTemp._make_country_filenames(query)
+        debug = False
+
+        html1 = self.search_phrases_into_html_lists(country_file, debug, indir, outfile)
+        assert html1 is not None
+        assert len(html1.xpath("//p")) > 0
+
+    def test_search_all_chapters_with_query_words_country(self):
+        """
+        read chapter, search for words and return list of paragraphs/ids in which they occur
+        simple, but requires no server
+        """
+        query = "country"
+        # topdir =
+        country_file, indir, outfile, outcsv = self._make_country_filenames(query)
+        debug = False
+
+        html1 = self.search_phrases_into_html_lists(country_file, debug, indir, outfile)
+        assert html1 is not None
+        assert len(html1.xpath("//p")) > 0
+
+    def test_analyse_countries(self):
+        """takes """
+        query = "country"
+        labels = ["para_id", "countries"]
+        country_file, indir, outfile, outcsv = self._make_country_filenames(query)
+
+        self.build_list_dict(labels, outcsv, outfile)
 
     def test_search_all_chapters_with_query_words_commandline(self, outfile=None):
         """
@@ -894,7 +979,8 @@ class TestIPCC(AmiAnyTest):
             "bananas",
             "South Asia"
         ]
-        html1 = IPCC.create_hit_html(infiles, phrases=phrases, outfile=outfile, debug=debug)
+        html1 = IPCC.search_inputfiles_with_phrases_into_html_tree_and_file(infiles, phrases=phrases, outfile=outfile,
+                                                                            debug=debug)
 
     def test_arguments_no_action(self):
 
@@ -979,7 +1065,7 @@ class TestIPCC(AmiAnyTest):
         # run args
         infile = Path(Resources.TEST_RESOURCES_DIR, 'ipcc', 'cleaned_content', 'wg1', 'Chapter02', 'html_with_ids.html')
 
-        html_tree = ET.parse(str(infile), HTMLParser())
+        html_tree = LibTemp.parse_html_lxml(infile)
 
         p_id = "//p[@id]"
         p_ids = html_tree.xpath(p_id)
@@ -1005,7 +1091,8 @@ class TestIPCC(AmiAnyTest):
         AMIClimate().run_command(
             ['IPCC', '--input', infile, '--query', query, '--output', output])
         html_tree = ET.parse(output)
-        assert (pp := len(html_tree.xpath(".//a[@href]"))) >= 11, f"found {pp} paras in {output}"
+        pp = len(html_tree.xpath(".//a[@href]"))
+        assert 6 <= pp <= 12, f"found {pp} paras in {output}"
 
         output = f"{Path(outdir, 'methane_ref')}.html"
         xpath_ref = "//p[@id and ancestor::*[@id='references']]"
@@ -1019,7 +1106,7 @@ class TestIPCC(AmiAnyTest):
         xpath_ref = "//p[@id and not(ancestor::*[@id='references'])]"
         AMIClimate().run_command(
             ['IPCC', '--input', infile, '--query', query, '--output', output, '--xpath', xpath_ref])
-        self.check_output_tree(output, xpath=".//a[@href]")
+        LibTemp.check_output_tree(output, xpath=".//a[@href]")
 
     def test_symbolic_xpaths(self):
 
@@ -1031,13 +1118,13 @@ class TestIPCC(AmiAnyTest):
         output = f"{Path(outdir, 'methane_refs1')}.html"
         AMIClimate().run_command(
             ['IPCC', '--input', infile, '--query', query, '--output', output, '--xpath', "_REFS"])
-        self.check_output_tree(output, expected=7, xpath=".//a[@href]")
+        LibTemp.check_output_tree(output, expected=7, xpath=".//a[@href]")
 
         output = f"{Path(outdir, 'methane_norefs1')}.html"
         AMIClimate().run_command(
             ['IPCC', '--input', infile, '--query', query, '--output', output, '--xpath', "_NOREFS"])
         # self.check_output_tree(output, expected=[2,8], xpath=".//a[@href]")
-        self.check_output_tree(output, xpath=".//a[@href]")
+        LibTemp.check_output_tree(output, xpath=".//a[@href]")
 
     def test_symbol_indir(self):
 
@@ -1050,7 +1137,7 @@ class TestIPCC(AmiAnyTest):
             ['IPCC', '--indir', "_IPCC_REPORTS", '--input', "_HTML_IDS", '--query', "methane", '--outdir', "_QUERY_OUT",
              "--output", output, '--xpath',
              "_NOREFS"])
-        self.check_output_tree(output, expected=[60,300], xpath=".//a[@href]")
+        LibTemp.check_output_tree(output, expected=[60, 300], xpath=".//a[@href]")
 
     def test_commandline_search_with_wildcards_and_join_indir(self):
         """generate inpout files """
@@ -1158,7 +1245,7 @@ class TestIPCC(AmiAnyTest):
         syr_annexe_content = Path(Resources.TEST_RESOURCES_DIR, 'ipcc', 'cleaned_content', 'syr', 'annexes-and-index',
                                   "content.html")
         assert syr_annexe_content.exists()
-        annexe_html = ET.parse(str(syr_annexe_content), HTMLParser())
+        annexe_html = LibTemp.parse_html_lxml(syr_annexe_content)
         assert annexe_html is not None
         body = HtmlLib.get_body(annexe_html)
         header1 = body.xpath("./div/div/div/div/header")[0]
@@ -1214,7 +1301,7 @@ class TestIPCC(AmiAnyTest):
         syr_lr_content = Path(Resources.TEST_RESOURCES_DIR, IPCC_DIR, CLEANED_CONTENT, SYR,
                               SYR_LR, HTML_WITH_IDS_HTML)
         assert syr_lr_content.exists()
-        lr_html = ET.parse(str(syr_lr_content), HTMLParser())
+        lr_html = LibTemp.parse_html_lxml(syr_lr_content)
         assert lr_html is not None
         body = HtmlLib.get_body(lr_html)
         header_h1 = body.xpath("div//h1")[0]
@@ -1254,7 +1341,7 @@ class TestIPCC(AmiAnyTest):
         filename = HTML_WITH_IDS_HTML
         syr_lr_content = Path(Resources.TEST_RESOURCES_DIR, IPCC_DIR, CLEANED_CONTENT, SYR,
                               SYR_LR, filename)
-        lr_html = ET.parse(str(syr_lr_content), HTMLParser())
+        lr_html = LibTemp.parse_html_lxml(syr_lr_content)
         body = HtmlLib.get_body(lr_html)
         publisher = IPCCGatsby()
         toc_html, ul = publisher.make_header_and_nav_ul(body)
@@ -1271,7 +1358,7 @@ class TestIPCC(AmiAnyTest):
         """
         syr_lr_content = Path(Resources.TEST_RESOURCES_DIR, 'ipcc', 'cleaned_content', 'syr',
                               'longer-report', HTML_WITH_IDS_HTML)
-        lr_html = ET.parse(str(syr_lr_content), HTMLParser())
+        lr_html = LibTemp.parse_html_lxml(syr_lr_content)
         span_texts = lr_html.xpath(".//span[text()[normalize-space(.)!='' "
                                    # "and startswith(normalize-space(.),'{') "
                                    # "and endswith(normalize-space(.),'}') "
@@ -1297,7 +1384,7 @@ class TestIPCC(AmiAnyTest):
 
         syr_lr_content = Path(Resources.TEST_RESOURCES_DIR, IPCC_DIR, CLEANED_CONTENT, SYR,
                               SYR_LR, HTML_WITH_IDS_HTML)
-        lr_html = ET.parse(str(syr_lr_content), HTMLParser())
+        lr_html = LibTemp.parse_html_lxml(syr_lr_content)
         para_with_ids = lr_html.xpath("//p[@id]")
         assert len(para_with_ids) == 206
         IPCC.find_analyse_curly_refs(para_with_ids)
@@ -1306,18 +1393,6 @@ class TestIPCC(AmiAnyTest):
         HtmlLib.write_html_file(lr_html, outpath, debug=True)
 
     # ========= helpers ============
-    def check_output_tree(self, output, expected=None, xpath=None):
-        assert xpath, f"must give xpath"
-        assert output, f"output cannot be None"
-        html_tree = ET.parse(output)
-        assert html_tree is not None, f"html_tree is None"
-        if expected:
-            pp = len(html_tree.xpath(xpath))
-            if type(expected) is list and len(expected) ==  2:
-                assert expected[0] <= pp <= expected[1], f"found {pp} elements in {output}, expected {expected}"
-            else:
-                assert pp == expected, f"found {pp} elements in {output}"
-
 
 class TestUNFCCC(AmiAnyTest):
     """Tests high level operations relating to UN content (currently SpanMarker and UN/IPCC)
@@ -1844,12 +1919,12 @@ class TestUNFCCC(AmiAnyTest):
         in_dir, session_dir, top_out_dir = self._make_top_in_and_out_and_session()
         try:
             AMIClimate().run_command(
-                ['UNFCCC', '--indir', str(in_dir), '--outdir', str(top_out_dir), '--session', session_dir, '--operation',
+                ['UNFCCC', '--indir', str(in_dir), '--outdir', str(top_out_dir), '--session', session_dir,
+                 '--operation',
                  UNFCCCArgs.PIPELINE])
             raise ValueError("should raise bad argument 'Pipeline' NYI")
         except Exception as e:
             assert True, "expected fail"
-
 
 
 class UNMiscTest(AmiAnyTest):

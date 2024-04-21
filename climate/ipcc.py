@@ -890,7 +890,7 @@ class IPCCArgs(AbstractArgs):
             print(f"no input files for search")
             return
         inputs = Util.get_list(inputx)
-        IPCC.create_hit_html(inputs, phrases=query, xpath=xpath, outfile=outfile, debug=debug)
+        IPCC.search_inputfiles_with_phrases_into_html_tree_and_file(inputs, phrases=query, xpath=xpath, outfile=outfile, debug=debug)
 
     # class IPCCArgs
 
