@@ -894,35 +894,55 @@ class TestIPCC(AmiAnyTest):
         """
         query = "terms"
         indir = Path(Resources.TEST_RESOURCES_DIR, 'ipcc')
-        ipcc_dir = LibTemp.get_ipcc_dir()
+        ipccx_dir = LibTemp.get_ipcc_dir()
+        dictionary_dir = Path(ipccx_dir, "dictionary")
         phrase_files = [
-            Path(ipcc_dir, "terms.xml"),
-            Path(ipcc_dir, "countries.txt"),
+            Path(dictionary_dir, "climate.xml"),
+            Path(dictionary_dir, "countries.txt"),
+            Path(dictionary_dir, "pests.xml"),
+            Path(dictionary_dir, "humanDiseases.xml"),
+            Path(dictionary_dir, "crops.txt"),
+            Path(dictionary_dir, "weather.txt"),
+            Path(dictionary_dir, "plant_genus.xml"),
         ]
+
+        dataframe_by_query = dict()
+        makecsv = False
         for phrase_file in phrase_files:
             query = Path(phrase_file).stem
 
             assert phrase_file.exists(), f"phrase file {phrase_file}"
-            # print(f"indir {indir}")
             outfile = Path(indir, f"{query}.html")
             debug = False
             globstr = f"{str(indir)}/**/{HTML_WITH_IDS}.html"
             infiles = FileLib.posix_glob(globstr, recursive=True)
-            print(f"{len(infiles)} {infiles[:2]}")
 
             suffix = Path(phrase_file).suffix
             xpath = "/dictionary/entry/@term"
             phrases = LibTemp.extract_phrases(phrase_file, suffix, xpath)
 
-            if not outfile.exists():
+            outcsv = Path(LibTemp.get_query_dir(), f"{query}.csv")
+            if not outcsv.exists() or makecsv:
                 html1 = IPCC.search_inputfiles_with_phrases_into_html_tree_and_file(
                     infiles, phrases=phrases, outfile=outfile,debug=debug)
             labels = ["para_id", query, "para_text"]
-            outcsv = Path(LibTemp.get_query_dir(), f"{query}.csv")
             print(f"CSV file {outcsv}")
-            LibTemp.build_list_dict(labels, outcsv, outfile, corpus=ipcc_dir)
+            dataframe = LibTemp.build_list_dict(labels, outcsv, outfile, corpus=dictionary_dir)
+            dataframe_by_query[query] = dataframe
 
-    def test_analyse_countries(self):
+        keys = list(dataframe_by_query.keys())
+        print(keys)
+        if len(keys) == 2:
+            df0 = dataframe_by_query.get(keys[0])
+            df1 = dataframe_by_query.get(keys[1])
+            # df01 = df0.join(df1)
+            df01 = df0.set_index('para_id').join(df1.set_index('para_id'))
+            print(f"df01 {df01}")
+
+
+
+    @unittest.skip("obsolete")
+    def test_analyse_countries_obsolete(self):
         """takes """
         query = "country"
         labels = ["para_id", "countries"]
@@ -939,7 +959,7 @@ class TestIPCC(AmiAnyTest):
         country_file, indir, outfile, outcsv = LibTemp._make_country_filenames(query)
         debug = False
 
-        html1 = self.search_phrases_into_html_lists(country_file, debug, indir, outfile)
+        html1 = LibTemp.search_phrases_into_html_lists(country_file, debug, indir, outfile)
         assert html1 is not None
         assert len(html1.xpath("//p")) > 0
 
@@ -950,10 +970,10 @@ class TestIPCC(AmiAnyTest):
         """
         query = "country"
         # topdir =
-        country_file, indir, outfile, outcsv = self._make_country_filenames(query)
+        country_file, indir, outfile, outcsv = LibTemp._make_country_filenames(query)
         debug = False
 
-        html1 = self.search_phrases_into_html_lists(country_file, debug, indir, outfile)
+        html1 = LibTemp.search_phrases_into_html_lists(country_file, debug, indir, outfile)
         assert html1 is not None
         assert len(html1.xpath("//p")) > 0
 
@@ -961,9 +981,9 @@ class TestIPCC(AmiAnyTest):
         """takes """
         query = "country"
         labels = ["para_id", "countries"]
-        country_file, indir, outfile, outcsv = self._make_country_filenames(query)
+        country_file, indir, outfile, outcsv = LibTemp._make_country_filenames(query)
 
-        self.build_list_dict(labels, outcsv, outfile)
+        LibTemp.build_list_dict(labels, outcsv, outfile)
 
     def test_search_all_chapters_with_query_words_commandline(self, outfile=None):
         """
