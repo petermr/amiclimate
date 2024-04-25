@@ -19,6 +19,7 @@ from lxml.etree import _Element, _ElementUnicodeResult
 from lxml.html import HTMLParser, HtmlComment
 
 import climate
+from climate.libs import LibTemp
 
 LR = "longer-report"
 SPM = "summary-for-policymakers"
@@ -799,89 +800,6 @@ class IPCC:
         for removable in removables:
             HtmlUtil.remove_element_in_hierarchy(removable)
         HtmlUtil.remove_empty_elements(html, "div")
-
-    @classmethod
-    def add_hit_with_filename_and_para_id(cls, all_dict, hit_dict, infile, para_phrase_dict):
-        """adds non-empty hits in hit_dict and all to all_dict
-        :param all_dict
-        """
-        item_paras = [item for item in para_phrase_dict.items() if len(item[1]) > 0]
-        if len(item_paras) > 0:
-            all_dict[infile] = para_phrase_dict
-            for para_id, hits in para_phrase_dict.items():
-                for hit in hits:
-                    # TODO should write file with slashes (on Windows we get %5C)
-                    infile_s = f"{infile}"
-                    infile_s = infile_s.replace("\\", "/")
-                    infile_s = infile_s.replace("%5C", "/")
-                    url = f"{infile_s}#{para_id}"
-                    hit_dict[hit].append(url)
-
-    @classmethod
-    def search_inputfiles_with_phrases_into_html_tree_and_file(cls, infiles, phrases=None, outfile=None, xpath=None, omit=None, debug=False):
-        all_paras = []
-        all_dict = dict()
-        hit_dict = defaultdict(list)
-        if not omit:
-            omit = ".*#references_.*"
-        if type(phrases) is not list:
-            phrases = [phrases]
-        for infile in infiles:
-            assert Path(infile).exists(), f"{infile} does not exist"
-            html_tree = lxml.etree.parse(str(infile), HTMLParser())
-            paras = HtmlLib.find_paras_with_ids(html_tree, xpath=xpath)
-            all_paras.extend(paras)
-
-            # this does the search
-            para_phrase_dict = HtmlLib.create_para_ohrase_dict(paras, phrases)
-            print(f"{para_phrase_dict}")
-            if len(para_phrase_dict) > 0:
-                if debug:
-                    print(f"para_phrase_dict {para_phrase_dict}")
-                IPCC.add_hit_with_filename_and_para_id(all_dict, hit_dict, infile, para_phrase_dict)
-        if debug:
-            print(f"para count~: {len(all_paras)}")
-        outfile = Path(outfile)
-        outfile.parent.mkdir(exist_ok=True, parents=True)
-        print(f"keys: {hit_dict.keys()}")
-        html1 = cls.create_html_from_hit_dict(hit_dict, omit=omit)
-        if outfile:
-            with open(outfile, "w") as f:
-                if debug:
-                    print(f" hitdict {hit_dict}")
-                HtmlLib.write_html_file(html1, outfile, debug=True)
-        return html1
-
-    @classmethod
-    def create_html_from_hit_dict(cls, hit_dict, omit=None):
-        html = HtmlLib.create_html_with_empty_head_body()
-        body = HtmlLib.get_body(html)
-        ul = ET.SubElement(body, "ul")
-        for term, hits in hit_dict.items():
-            li = ET.SubElement(ul, "li")
-            p = ET.SubElement(li, "p")
-            p.text = term
-            ul1 = ET.SubElement(li, "ul")
-            for hit in hits:
-                if omit:
-                    match = re.match(omit, hit)
-                    if match:
-                        continue # skip
-                # TODO manage hits with Paths
-                # on windows some hits have "%5C' instead of "/"
-                hit = str(hit).replace("%5C", "/")
-                li1 = ET.SubElement(ul1, "li")
-                a = ET.SubElement(li1, "a")
-                a.text = hit.replace("/html_with_ids.html", "")
-                ss = "ipcc/"
-                try:
-                    idx = a.text.index(ss)
-                except Exception as e:
-                    print(f"cannot find substring {ss} in {a}")
-                    continue
-                a.text = a.text[idx + len(ss):]
-                a.attrib["href"] = hit
-        return html
 
     @classmethod
     def find_analyse_curly_refs(cls, para_with_ids):

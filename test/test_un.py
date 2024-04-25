@@ -648,12 +648,17 @@ class TestIPCC(AmiAnyTest):
                 outdir = Path(TEMP_DIR, report, chap)
                 IPCC.download_save_chapter(report, chap, wg_url, outdir=TEMP_DIR, sleep=1)
                 raw_outfile = Path(outdir, f"{GATSBY_RAW}.html")
+
                 FileLib.assert_exist_size(raw_outfile, minsize=20000, abort=False)
 
                 gatsby_file = Path(outdir, f"{GATSBY_RAW}.html")
+                LibTemp.assert_has_paras(None, file=gatsby_file)
                 html_elem = web_publisher.remove_unnecessary_markup(gatsby_file)
+                LibTemp.assert_has_paras(html_elem)
+                print(f"html from gatsby_raw {ET.tostring(html_elem)}")
                 assert html_elem is not None, f"{gatsby_file} should not give None html"
                 body = HtmlLib.get_body(html_elem)
+                assert body is not None,  f"file {gatsby_file}"
                 elems = body.xpath(".//*")
                 if len(elems) < 2:
                     # no significant content
@@ -841,7 +846,8 @@ class TestIPCC(AmiAnyTest):
         topdir = Path(Resources.TEST_RESOURCES_DIR, 'ipcc')
         publisher.raw_to_paras_and_ids(topdir, )
 
-    def test_search_wg3_and_index_chapters_with_ids(self):
+    def \
+            test_search_wg3_and_index_chapters_with_ids_no_para_dict_error(self):
         """
         read chapter, search for words and return list of paragraphs/ids in which they occur
         simple, but requires no server
@@ -866,7 +872,7 @@ class TestIPCC(AmiAnyTest):
         multi_item_paras = [item for item in para_phrase_dict.items() if len(item[1]) > 1]
         assert len(multi_item_paras) == 60
 
-    def test_search_all_chapters_with_query_words(self, outfile=None):
+    def test_search_all_chapters_with_query_words_no_paras(self, outfile=None):
         """
         read chapter, search for words and return list of paragraphs/ids in which they occur
         simple, but requires no server
@@ -884,15 +890,14 @@ class TestIPCC(AmiAnyTest):
         ]
         html1 = IPCC.search_inputfiles_with_phrases_into_html_tree_and_file(infiles, phrases=phrases, outfile=outfile,
                                                                             debug=debug)
-        assert html1 is not None
-        assert len(html1.xpath("//p")) > 0
+        LibTemp.assert_has_paras(html1)
 
     def test_search_all_chapters_with_terms(self, outfile=None):
         """
         read chapter, search for words and return list of paragraphs/ids in which they occur
         simple, but requires no server
         """
-        query = "terms"
+        query = "NONE"
         indir = Path(Resources.TEST_RESOURCES_DIR, 'ipcc')
         ipccx_dir = LibTemp.get_ipcc_dir()
         dictionary_dir = Path(ipccx_dir, "dictionary")
@@ -903,7 +908,7 @@ class TestIPCC(AmiAnyTest):
             Path(dictionary_dir, "humanDiseases.xml"),
             Path(dictionary_dir, "crops.txt"),
             Path(dictionary_dir, "weather.txt"),
-            Path(dictionary_dir, "plant_genus.xml"),
+            # Path(dictionary_dir, "plant_genus.xml"), # TOO BIG
         ]
 
         dataframe_by_query = dict()
@@ -946,7 +951,7 @@ class TestIPCC(AmiAnyTest):
         """takes """
         query = "country"
         labels = ["para_id", "countries"]
-        country_file, indir, outfile, outcsv = LibTemp._make_country_filenames(query)
+        _, indir, outfile, outcsv = LibTemp._make_country_filenames(query)
 
         LibTemp.build_list_dict(labels, outcsv, outfile)
 
@@ -956,12 +961,12 @@ class TestIPCC(AmiAnyTest):
         simple, but requires no server
         """
         query = "climate"
-        country_file, indir, outfile, outcsv = LibTemp._make_country_filenames(query)
+        _, indir, outfile, outcsv = LibTemp._make_country_filenames(query)
+        print (f"{country_file}, {indir},{outfile}, {outcsv}")
         debug = False
 
         html1 = LibTemp.search_phrases_into_html_lists(country_file, debug, indir, outfile)
-        assert html1 is not None
-        assert len(html1.xpath("//p")) > 0
+        LibTemp.assert_has_paras(html1)
 
     def test_search_all_chapters_with_query_words_country(self):
         """
@@ -970,22 +975,26 @@ class TestIPCC(AmiAnyTest):
         """
         query = "country"
         # topdir =
-        country_file, indir, outfile, outcsv = LibTemp._make_country_filenames(query)
+        phrase_file, indir, outfile, outcsv = LibTemp._make_country_filenames(query)
+        LibTemp.validate_file(phrase_file)
         debug = False
 
-        html1 = LibTemp.search_phrases_into_html_lists(country_file, debug, indir, outfile)
+        html1 = LibTemp.search_phrases_into_html_lists(phrase_file, debug, indir, outfile)
         assert html1 is not None
-        assert len(html1.xpath("//p")) > 0
+        assert len(html1.xpath("//p")) > 0, f"html> {ET.tostring(html1)[:200]}"
 
     def test_analyse_countries(self):
         """takes """
         query = "country"
         labels = ["para_id", "countries"]
-        country_file, indir, outfile, outcsv = LibTemp._make_country_filenames(query)
+        _, indir, outfile, outcsv = LibTemp._make_country_filenames(query)
+        print(f"_,{indir}, {outfile}, {outcsv}")
+        country_list_file = Path(LibTemp.get_test_dir(), "country.html")
+        outcsv = Path(LibTemp.get_test_dir(), "country.csv")
+        corpus = LibTemp.get_ipcc_dir()
+        LibTemp.build_list_dict(labels, outcsv, listfile=country_list_file, corpus=corpus)
 
-        LibTemp.build_list_dict(labels, outcsv, outfile)
-
-    def test_search_all_chapters_with_query_words_commandline(self, outfile=None):
+    def test_search_all_chapters_with_query_words_commandline_no_children_error(self, html_stem=HTML_WITH_IDS, outfile=None):
         """
         read chapter, search for words and return list of paragraphs/ids in which they occur
         simple, but requires no server
@@ -994,13 +1003,14 @@ class TestIPCC(AmiAnyTest):
         path = Path(Resources.TEST_RESOURCES_DIR, 'ipcc')
         outfile = Path(path, f"{query}.html")
         debug = False
-        infiles = FileLib.posix_glob(f"{str(path)}/**/{HTML_WITH_IDS}.html", recursive=True)
+        infiles = FileLib.posix_glob(f"{str(path)}/**/{html_stem}.html", recursive=True)
         phrases = [
             "bananas",
             "South Asia"
         ]
         html1 = IPCC.search_inputfiles_with_phrases_into_html_tree_and_file(infiles, phrases=phrases, outfile=outfile,
                                                                             debug=debug)
+        LibTemp.assert_has_paras(html1)
 
     def test_arguments_no_action(self):
 
@@ -1099,7 +1109,7 @@ class TestIPCC(AmiAnyTest):
         p_not_refs = html_tree.xpath(xpath_not_ref)
         assert len(p_not_refs) >= 100, f"p_not_refs {len(p_not_refs)}"
 
-    def test_search_with_xpaths(self):
+    def test_search_with_xpaths_no_paras_error(self):
         """include/omit paras by xpath """
 
         query = ["methane"]
@@ -1111,6 +1121,7 @@ class TestIPCC(AmiAnyTest):
         AMIClimate().run_command(
             ['IPCC', '--input', infile, '--query', query, '--output', output])
         html_tree = ET.parse(output)
+        LibTemp.assert_has_paras(html_tree)
         pp = len(html_tree.xpath(".//a[@href]"))
         assert 6 <= pp <= 12, f"found {pp} paras in {output}"
 
@@ -1128,7 +1139,7 @@ class TestIPCC(AmiAnyTest):
             ['IPCC', '--input', infile, '--query', query, '--output', output, '--xpath', xpath_ref])
         LibTemp.check_output_tree(output, xpath=".//a[@href]")
 
-    def test_symbolic_xpaths(self):
+    def test_symbolic_xpaths_fails(self):
 
         infile = str(
             Path(Resources.TEST_RESOURCES_DIR, 'ipcc', 'cleaned_content', 'wg1', 'Chapter02', 'html_with_ids.html'))
@@ -1146,7 +1157,7 @@ class TestIPCC(AmiAnyTest):
         # self.check_output_tree(output, expected=[2,8], xpath=".//a[@href]")
         LibTemp.check_output_tree(output, xpath=".//a[@href]")
 
-    def test_symbol_indir(self):
+    def test_symbol_indir_no_paras_error(self):
 
         infile = "**/html_with_ids.html"
         outdir = f"{Path(Resources.TEMP_DIR, 'queries')}"

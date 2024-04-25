@@ -19,6 +19,7 @@ import requests
 #
 from amilib.ami_html import URLCache, HtmlUtil, H_DIV, H_A, HtmlStyle, A_NAME, A_CLASS, A_ID, A_STYLE, H_SPAN
 # from pyamihtmlx.ami_integrate import HtmlGenerator
+from climate.libs import LibTemp
 from climate.un import IPCC, GATSBY, DE_GATSBY, WORDPRESS, DE_WORDPRESS, GATSBY_RAW, WORDPRESS_RAW, SPM, TS, LR, AR6_URL
 
 from test.resources import Resources
@@ -890,7 +891,7 @@ class IPCCArgs(AbstractArgs):
             print(f"no input files for search")
             return
         inputs = Util.get_list(inputx)
-        IPCC.search_inputfiles_with_phrases_into_html_tree_and_file(inputs, phrases=query, xpath=xpath, outfile=outfile, debug=debug)
+        LibTemp.search_inputfiles_with_phrases_into_html_tree_and_file(inputs, phrases=query, xpath=xpath, outfile=outfile, debug=debug)
 
     # class IPCCArgs
 
@@ -1220,7 +1221,14 @@ class IPCCPublisherTool(ABC):
         head = HtmlLib.get_head(html_elem)
         IPCC.add_styles_to_head(head)
         removable_xpaths = self.get_removable_xpaths()
+        print(f"removable paths {removable_xpaths}")
+        LibTemp.assert_has_body(html_elem, children=True)
+        body = HtmlLib.get_body(html_elem)
+        LibTemp.assert_has_paras(body)
         IPCC.remove_unnecessary_containers(html_elem, removable_xpaths=removable_xpaths)
+        LibTemp.assert_has_body(html_elem, children=True)
+        body = HtmlLib.get_body(html_elem)
+        LibTemp.assert_has_paras(body)
         return html_elem
 
     @classmethod
@@ -2116,7 +2124,7 @@ class IPCCDict:
                 WEB_PUBLISHER: GATSBY_CLASSNAME,
                 TITLE: "Climate Change 2021: The Physical Science Basis",
                 CHAPTER_INFO: {
-                    URL_REGEX: f"{AR6_URL}/wg1/chapter/chapter-(?P<chapno>\d+)",
+                    URL_REGEX: f"{AR6_URL}/wg1/chapter/chapter-(?P<chapno>\\d+)",
                     COUNT: 13,
                     CHAPTERS: [
                         {TITLE: "Chapter 1: Framing, Context and Methods",
