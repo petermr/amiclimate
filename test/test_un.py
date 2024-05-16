@@ -91,7 +91,7 @@ WG3_URL = AR6_URL + "wg3/"
 # SC_TEST_DIR = Path(OUT_DIR_TOP, "ipcc", "ar6", "test")
 
 logger = logging.getLogger(__file__)
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.DEBUG)
 
 class TestIPCC(AmiAnyTest):
 
@@ -641,10 +641,13 @@ class TestIPCC(AmiAnyTest):
                 print(f"chapter: {chap}")
                 outdir = Path(TEMP_DIR, report, chap)
                 IPCC.download_save_chapter(report, chap, wg_url, outdir=TEMP_DIR, sleep=1)
-                raw_outfile = Path(outdir, f"{GATSBY_RAW}.html")
-                FileLib.assert_exist_size(raw_outfile, minsize=20000, abort=False)
-
                 gatsby_file = Path(outdir, f"{GATSBY_RAW}.html")
+                logger.info(f"created raw outfile {gatsby_file}")
+                print(f"created raw outfile {gatsby_file}")
+                FileLib.assert_exist_size(gatsby_file, minsize=20000, abort=False)
+                raw_html_elem = ET.parse(str(gatsby_file), HTMLParser())
+                raw_body = HtmlLib.get_body(raw_html_elem)
+                assert raw_body is not None, f"{gatsby_file} should have body"
                 html_elem = web_publisher.remove_unnecessary_markup(gatsby_file)
                 assert html_elem is not None, f"{gatsby_file} should not give None html"
                 body = HtmlLib.get_body(html_elem)
