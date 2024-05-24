@@ -678,7 +678,7 @@ class TestIPCC(AmiAnyTest):
 
         AMIClimate().run_command(args)
 
-    def test_cmdline_search(selfself):
+    def test_cmdline_search(self):
         """
         search reports with keywords
         """

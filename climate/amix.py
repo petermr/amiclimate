@@ -18,6 +18,7 @@ import lxml.etree as etree
 from amilib.pdf_args import PDFArgs
 from amilib.html_args import HTMLArgs
 from amilib.file_lib import FileLib
+from amilib.amix import AmiLibArgs
 from climate.ipcc import IPCCArgs
 from climate.un import UNFCCCArgs
 from amilib.util import AmiLogger, Util
@@ -31,6 +32,7 @@ REPO_DIR = AMIX_DIR.parent
 # class SubParser(Enum):
 #     DICT = "DICT"
 
+logger = logger = FileLib.get_logger(__file__)
 
 class AMIClimate:
     """ main entry point for running pyami
@@ -225,10 +227,10 @@ class AMIClimate:
         for choice in subparsers.choices:
             print(f">>> {choice}")
 
-        html_parser = HTMLArgs().make_sub_parser(subparsers)
-        ipcc_parser = IPCCArgs().make_sub_parser(subparsers)
-        pdf_parser = PDFArgs().make_sub_parser(subparsers)
-        unfccc_parser = UNFCCCArgs().make_sub_parser(subparsers)
+        ipcc_parser = AmiLibArgs.make_sub_parser(IPCCArgs(), subparsers)
+        logger.debug(f"ipcc_parser {ipcc_parser}")
+        unfccc_parser = AmiLibArgs.make_sub_parser(UNFCCCArgs(), subparsers)
+        logger.debug(f"unfccc_parser {unfccc_parser}")
 
         parser.epilog = "other entry points run as 'python -m pyamihtmlx.ami_dict args' also ami_pdf, ami_project"
         parser.epilog = """run:

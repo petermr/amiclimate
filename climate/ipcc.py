@@ -11,7 +11,8 @@ from pathlib import Path
 #
 import lxml.etree as ET
 from amilib.file_lib import FileLib
-from amilib.util import AbstractArgs, Util
+from amilib.util import Util
+from amilib.ami_args import AbstractArgs
 from amilib.xml_lib import HtmlLib, XmlLib
 from lxml.html import HTMLParser
 import pandas as pd

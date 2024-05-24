@@ -12,7 +12,7 @@ import lxml
 import lxml.etree as ET
 from amilib.amidriver import AmiDriver
 from amilib.file_lib import FileLib
-from amilib.util import AbstractArgs
+from amilib.ami_args import AbstractArgs
 from amilib.xml_lib import HtmlLib, XmlLib
 from amilib.ami_html import HtmlUtil
 from lxml.etree import _Element, _ElementUnicodeResult
