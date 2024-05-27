@@ -2117,7 +2117,7 @@ class IPCCDict:
                 WEB_PUBLISHER: GATSBY_CLASSNAME,
                 TITLE: "Climate Change 2021: The Physical Science Basis",
                 CHAPTER_INFO: {
-                    URL_REGEX: f"{AR6_URL}/wg1/chapter/chapter-(?P<chapno>\d+)",
+                    URL_REGEX: f"{AR6_URL}/wg1/chapter/chapter-(?P<chapno>\\d+)",
                     COUNT: 13,
                     CHAPTERS: [
                         {TITLE: "Chapter 1: Framing, Context and Methods",

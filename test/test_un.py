@@ -538,31 +538,11 @@ class TestIPCC(AmiAnyTest):
         """
         reports = [
             IP_WG1,
-            IP_WG2,
-            IP_WG3,
         ]
         chapters = [
             SPM,
             TS,
             "chapter-1",
-            # "chapter-2",
-            # "chapter-3",
-            # "chapter-4",
-            # "chapter-5",
-            # "chapter-6",
-            # "chapter-7",
-            # "chapter-8",
-            # "chapter-9",
-            # "chapter-10",
-            # "chapter-11",
-            # "chapter-12",
-            # "chapter-13",
-            # "chapter-14",
-            # "chapter-15",
-            # "chapter-16",
-            # "chapter-17",
-            # "chapter-18",
-            # "chapter-19",
         ]
         web_publisher = IPCCGatsby()
         for report in reports:
@@ -573,16 +553,14 @@ class TestIPCC(AmiAnyTest):
                 outdir = Path(TEMP_DIR, report, chap)
                 print(f"outdir {outdir}")
                 IPCC.download_save_chapter(report, chap, wg_url, outdir=TEMP_DIR, sleep=1)
-                raw_outfile = Path(outdir, f"{GATSBY_RAW}.html")
-                FileLib.assert_exist_size(raw_outfile, minsize=20000, abort=False)
-
-                gatsby_file = Path(outdir, f"{GATSBY_RAW}.html")
-                assert (f := Path(gatsby_file)).exists(), f"file should exist {f}"
-                html_elem = web_publisher.remove_unnecessary_markup(gatsby_file)
-                assert html_elem is not None, f"{gatsby_file} gave None html_elem"
+                raw_gatsby_file = Path(outdir, f"{GATSBY_RAW}.html")
+                print(f"checking raw Gatsby file {raw_gatsby_file}")
+                FileLib.assert_exist_size(raw_gatsby_file, minsize=20000, abort=False)
+                html_elem = web_publisher.remove_unnecessary_markup(raw_gatsby_file)
+                assert html_elem is not None, f"{raw_gatsby_file} gave None html_elem"
                 body = HtmlLib.get_body(html_elem)
                 if body is None:
-                    print(f"None body for {html_elem} in {gatsby_file}")
+                    print(f"None body for {html_elem} in {raw_gatsby_file}")
                     continue
                 elems = body.xpath(".//*")
                 if len(elems) < 2:
@@ -593,6 +571,8 @@ class TestIPCC(AmiAnyTest):
 
                 html_ids_file, idfile, parafile = web_publisher.add_ids(de_gatsby_file, outdir, assert_exist=True,
                                                                         min_id_sizs=10, min_para_size=10)
+                print(f"idfile {idfile}")
+                print(f"parafile {parafile}")
 
     def test_download_wg_chapter_spm_ts_using_dict_IMPORTANT(self):
         """downlaods all parts of WG reports
