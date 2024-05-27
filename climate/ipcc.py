@@ -1100,7 +1100,9 @@ class IPCCChapter:
             HtmlUtil.remove_elems(html_elem, xpath=xpath)
         HtmlUtil.remove_style_attributes(html_elem)
 
-
+# filename quaifiers
+RAW = "raw"
+DE = "de"
 class IPCCPublisherTool(ABC):
 
     @abstractmethod
@@ -1242,12 +1244,31 @@ class IPCCPublisherTool(ABC):
         clazz = Util.get_class_from_name(name)
         return clazz
 
+    @property
+    @abstractmethod
+    def base_filename(self):
+        pass
+
+    def download_clean_chapter(self, chap, minsize, outdir, report, wg_url):
+        outdir = Path(outdir, report, chap)
+        IPCC.download_save_chapter(report, chap, wg_url, outdir=outdir, sleep=1)
+        raw_file = Path(outdir, f"{self.base_filename}_{RAW}.html")
+        FileLib.assert_exist_size(raw_file, minsize=minsize, abort=False)
+        html_elem = self.remove_unnecessary_markup(raw_file)
+        assert html_elem is not None, f"{raw_file} should not give None html"
+        body = HtmlLib.get_body(html_elem)
+        de_gatsby_file = Path(outdir, f"{DE}_{self.base_filename}.html")
+        HtmlLib.write_html_file(html_elem, outfile=de_gatsby_file, debug=True)
+        html_ids_file, idfile, parafile = self.add_ids(de_gatsby_file, outdir, assert_exist=True,
+                                                                min_id_sizs=10, min_para_size=10)
+
 
 class IPCCGatsby(IPCCPublisherTool):
 
     def __init__(self, filename=None):
         self.filename = filename if filename else HTML_WITH_IDS
         self.container_levels = ["h1-container", "h2-container", "h3-container", "h4-container"]
+
 
     @property
     def raw_filename(self):

@@ -969,6 +969,21 @@ class IPCC:
 
     @classmethod
     def download_save_chapter(self, report, chap, wg_url, outdir=None, sleep=2):
+        """
+
+        Parameters
+        ----------
+        report
+        chap
+        wg_url
+        outdir
+        sleep
+
+        Returns
+        -------
+
+    MESSY - should be in web_publisher
+        """
         ami_driver = AmiDriver(sleep=sleep)
         web_publisher_classname = climate.ipcc.IPCCPublisherTool.get_web_publisher_classname(report)
         if not web_publisher_classname:
