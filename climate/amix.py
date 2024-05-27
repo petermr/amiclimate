@@ -1169,6 +1169,8 @@ class AMIClimate:
         """
 
         version = '0.0.1a1'  # 2024-03-27
+        version = '0.0.1a21',  # 2024-05-27
+
 
         # logging.warn(f"VERSION {version}")
         return version

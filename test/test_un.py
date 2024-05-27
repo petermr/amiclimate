@@ -622,7 +622,7 @@ class TestIPCC(AmiAnyTest):
                 outdir = Path(TEMP_DIR, report, chap)
                 IPCC.download_save_chapter(report, chap, wg_url, outdir=TEMP_DIR, sleep=1)
                 raw_outfile = Path(outdir, f"{GATSBY_RAW}.html")
-                FileLib.assert_exist_size(raw_outfile, minsize=20000, abort=False)
+                FileLib.assert_exist_size(raw_outfile, minsize=1000000, abort=False)
 
                 gatsby_file = Path(outdir, f"{GATSBY_RAW}.html")
                 html_elem = web_publisher.remove_unnecessary_markup(gatsby_file)
