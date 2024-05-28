@@ -74,6 +74,8 @@ ID_LIST = "id_list"
 PARA_LIST = "para_list"
 MANUAL = "manual"
 
+CHAPTER = "chapter"
+
 
 class IPCCCommand:
 
@@ -691,12 +693,6 @@ class IPCCArgs(AbstractArgs):
             if not output:
                 print(f"*** no output argument, no search")
             else:
-                # parent = Path(output).parent
-                # if parent is None:
-                #     print(f"{output} has no parent")
-                #     return
-                # hitdictfile = Path(parent, "html_dict.html")
-                # print(f"html_dict_file {hitdictfile}")
                 self.search(input, query=query, xpath=xpath, outfile=output)
         else:
             logger.warning(f"Unknown operation {operation}")
@@ -913,8 +909,8 @@ class IPCCArgs(AbstractArgs):
             chapters = self.get_chapters()
             chapters = self.chapter_wildcards(chapters, report)  # kludge until we get a IPCC python dictionary
             for chapter in chapters:
-                wg_url = f"{indir}/{report}/{chapter}"
-                print(f"downloading from: ")
+                wg_url = f"{indir}/{report}/"
+                print(f"downloading from: {wg_url}")
                 IPCC.download_save_chapter(report, chapter, wg_url, outdir=outdir, sleep=1)
 
     def chapter_wildcards(self, chapters, report):

@@ -968,9 +968,9 @@ class IPCC:
         return chapter.lower()
 
     @classmethod
-    def download_save_chapter(self, report, chap, wg_url, outdir=None, sleep=2):
+    def download_save_chapter(cls, report, chap, wg_url, outdir=None, sleep=2):
         """
-
+        creates url of form {wg_url}/{report}/chapter/{chap}
         Parameters
         ----------
         report
