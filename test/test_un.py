@@ -608,6 +608,44 @@ class TestIPCC(AmiAnyTest):
     def test_cmdline_download_wg_reports(self):
         """download WG reports
         output in petermr/semanticClimate
+        FAILS TO DOWNLOAD
+        """
+        AMIClimate().run_command(["IPCC", "--help"])
+
+        inurl = f"{AR6_URL}/"
+        outdir = Path(f"{TEMP_DIR}/debug/")
+        wg = "wg1"
+        chapters = ["chapter-1", "SPM", "TS"]
+        # assert indir.exists()
+        assert outdir.exists()
+        args = [
+            "IPCC",
+            "--indir", inurl,
+            "--outdir", outdir,
+            "--informat", GATSBY,
+            "--chapter", chapters,
+            "--report", wg,
+            "--operation", IPCCArgs.DOWNLOAD,
+            "--kwords", "chapter:chapter",  # for test
+            "--debug",
+        ]
+
+        wgdir = Path(outdir, wg)
+        FileLib.delete_directory_contents(wgdir, delete_directory=True)
+        assert not wgdir.exists(), f"{wgdir} should have been deleted"
+
+        AMIClimate().run_command(args)
+        assert wgdir.exists(), f"{wgdir} should have been created"
+
+        chap1_dir = Path(wgdir, chapters[0])
+        assert chap1_dir.exists()
+        raw_gatsby = Path(chap1_dir, "raw_gatsby")
+        assert raw_gatsby.exists()
+
+
+    def test_cmdline_download_sr_reports(self):
+        """download WG reports
+        output in petermr/semanticClimate
         """
         AMIClimate().run_command(["IPCC", "--help"])
 
@@ -615,9 +653,9 @@ class TestIPCC(AmiAnyTest):
             "IPCC",
             "--indir", f"{AR6_URL}/",
             "--outdir", f"{TEMP_DIR}",
-            "--informat", GATSBY,
+            "--informat", WORDPRESS,
             "--chapter", "SPM", "TS",
-            "--report", "wg1", "srocc",
+            "--report", "srocc",
             "--operation", IPCCArgs.DOWNLOAD,
             "--kwords", "chapter:chapter",  # for test
             "--debug",
