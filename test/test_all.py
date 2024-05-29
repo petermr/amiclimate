@@ -71,9 +71,14 @@ class AmiAnyTest(unittest.TestCase):
 
 
 class UtilTests:
+    """Tests that are either trivial or are (extracted) methods to support
+    multiple tests (and maybe destined for libraries.
+    We may create modified versions of `amilib`
+    """
     def test_dict_read(self):
         file = "section_templates.json"
         return Util.read_pydict_from_json(file)
+
 
 
 

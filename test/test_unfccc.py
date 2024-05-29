@@ -333,7 +333,8 @@ class TestUNFCCC(AmiAnyTest):
         input_dir = Path(UNFCCC_DIR, "unfcccdocuments1", "CMA_3")
         infile = Path(input_dir, "1_4_CMA_3_section", f"normalized.sections.html")
         assert str(infile).endswith(
-            "test/resources/unfccc/unfcccdocuments1/CMA_3/1_4_CMA_3_section/normalized.sections.html")
+            "test/resources/unfccc/unfcccdocuments1/CMA_3/1_4_CMA_3_section/normalized.sections.html"),\
+            f"should have a file .../test/resources/unfccc/unfcccdocuments1/CMA_3/1_4_CMA_3_section/normalized.sections.html"
         span_marker = SpanMarker(markup_dict=MARKUP_DICT)
         span_marker.parse_html(infile)
         span_marker.move_implicit_children_to_parents(span_marker.inhtml)

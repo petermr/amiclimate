@@ -7,7 +7,7 @@ from test.resources import Resources
 from test.test_all import AmiAnyTest
 class UNMiscTest(AmiAnyTest):
     """
-    May really belone in PDFPlumber tests
+    May really belong in PDFPlumber tests
     """
 
     def test_pdfplumber_singlecol_create_spans_with_CSSStyles(self):

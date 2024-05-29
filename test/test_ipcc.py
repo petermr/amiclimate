@@ -597,6 +597,7 @@ class TestIPCC(AmiAnyTest):
         wg = "wg1"
         chapters = ["chapter-1", SPM, TS]
         # assert indir.exists()
+        FileLib.force_mkdir(outdir)
         assert outdir.exists()
         args = [
             "IPCC",
@@ -1183,6 +1184,8 @@ class TestIPCC(AmiAnyTest):
         report = 'longer-report'
         syr_lr_content = Path(Resources.TEST_RESOURCES_DIR, IPCC_DIR, CLEANED_CONTENT, SYR,
                               SYR_LR, HTML_WITH_IDS_HTML)
+        logger.warning(f"SYR file is: {syr_lr_content}")
+        print(f"SYR file is: {syr_lr_content}")
         assert syr_lr_content.exists()
         lr_html = ET.parse(str(syr_lr_content), HTMLParser())
         assert lr_html is not None
