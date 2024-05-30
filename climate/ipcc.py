@@ -8,18 +8,17 @@ from abc import ABC, abstractmethod
 from collections import defaultdict, Counter
 from io import BytesIO
 from pathlib import Path
-#
 import lxml.etree as ET
-from amilib.file_lib import FileLib
-from amilib.util import Util
-from amilib.ami_args import AbstractArgs
-from amilib.xml_lib import HtmlLib, XmlLib
 from lxml.html import HTMLParser
 import pandas as pd
 import requests
 #
 from amilib.ami_html import URLCache, HtmlUtil, H_DIV, H_A, HtmlStyle, A_NAME, A_CLASS, A_ID, A_STYLE, H_SPAN
-# from pyamihtmlx.ami_integrate import HtmlGenerator
+from amilib.file_lib import FileLib
+from amilib.util import Util
+from amilib.ami_args import AbstractArgs
+from amilib.xml_lib import HtmlLib, XmlLib
+
 from climate.un import IPCC, GATSBY, DE_GATSBY, WORDPRESS, DE_WORDPRESS, GATSBY_RAW, WORDPRESS_RAW, SPM, TS, LR, AR6_URL
 
 from test.resources import Resources
@@ -165,7 +164,6 @@ class IPCCCommand:
     @classmethod
     def save_args_to_global(cls, kwargs_dict, overwrite=False):
         return None
-        from pyamihtmlx.ami_config import doc_info
 
         for key, value in kwargs_dict.items():
             if overwrite or key not in doc_info:

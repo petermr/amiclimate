@@ -71,8 +71,8 @@ WG3_URL = AR6_URL + "wg3/"
 
 # SC_TEST_DIR = Path(OUT_DIR_TOP, "ipcc", "ar6", "test")
 
-logger = logging.getLogger(__file__)
-logger.setLevel(logging.WARNING)
+logger = FileLib.get_logger(__file__)
+logger.setLevel(logging.INFO)
 
 class TestIPCC(AmiAnyTest):
 
@@ -114,7 +114,7 @@ class TestIPCC(AmiAnyTest):
         return
 
         in_dir, session_dir, top_out_dir = self._make_query()
-        outdir = "/Users/pm286/workspace/climate/temp/"
+        outdir =  TEMP_DIR
         AMIClimate().run_command(
             ['IPCC', '--input', "WG3_CHAP08", '--outdir', str(top_out_dir),
              '--operation', UNFCCCArgs.PIPELINE])
@@ -171,8 +171,6 @@ class TestIPCC(AmiAnyTest):
                 print(f"cannot read {file} because {e}")
                 continue
             total_spanlist.append((file, spanlist))
-        # csvlist = []
-        # csvlist.append(["qid", "Len"], "P1")
         output_dir = Path(Resources.TEMP_DIR, "html", "ipcc", "wg2", "spm", "pages")
         output_dir.mkdir(exist_ok=True, parents=True)
         section_file = Path(output_dir, 'sections.csv')
@@ -528,20 +526,20 @@ class TestIPCC(AmiAnyTest):
         web_publisher = IPCCGatsby()
         for report in reports:
             wg_url = f"{AR6_URL}{report}/"
-            print(f"report: {report}")
+            logger.info(f"report: {report}")
             for chap in chapters:
-                print(f"chapter: {chap}")
+                logger.info(f"chapter: {chap}")
                 outdir = Path(TEMP_DIR, report, chap)
-                print(f"outdir {outdir}")
+                logger.info(f"outdir {outdir}")
                 IPCC.download_save_chapter(report, chap, wg_url, outdir=TEMP_DIR, sleep=1)
                 raw_gatsby_file = Path(outdir, f"{GATSBY_RAW}.html")
-                print(f"checking raw Gatsby file {raw_gatsby_file}")
+                logger.info(f"checking raw Gatsby file {raw_gatsby_file}")
                 FileLib.assert_exist_size(raw_gatsby_file, minsize=20000, abort=False)
                 html_elem = web_publisher.remove_unnecessary_markup(raw_gatsby_file)
                 assert html_elem is not None, f"{raw_gatsby_file} gave None html_elem"
                 body = HtmlLib.get_body(html_elem)
                 if body is None:
-                    print(f"None body for {html_elem} in {raw_gatsby_file}")
+                    logger.error(f"None body for {html_elem} in {raw_gatsby_file}")
                     continue
                 elems = body.xpath(".//*")
                 if len(elems) < 2:
@@ -552,8 +550,8 @@ class TestIPCC(AmiAnyTest):
 
                 html_ids_file, idfile, parafile = web_publisher.add_ids(de_gatsby_file, outdir, assert_exist=True,
                                                                         min_id_sizs=10, min_para_size=10)
-                print(f"idfile {idfile}")
-                print(f"parafile {parafile}")
+                logger.info(f"idfile {idfile}")
+                logger.info(f"parafile {parafile}")
 
     def test_download_wg_chapter_spm_ts_using_dict_IMPORTANT(self):
         """downlaods all parts of WG reports
@@ -715,7 +713,7 @@ class TestIPCC(AmiAnyTest):
         infiles = FileLib.posix_glob(globx)
         assert len(infiles) > 10
         print(f"de_publisher files {len(infiles)}")
-        cleaned_path = Path(Resources.TEST_RESOURCES_DIR, "ipcc", "cleaned_content")
+        cleaned_path = Path(TEMP_DIR, "ipcc", "cleaned_content")
         for infile in infiles:
             chap = Path(infile).parent.stem
             sr = Path(infile).parent.parent.stem
@@ -740,11 +738,19 @@ class TestIPCC(AmiAnyTest):
         take output after downloading anc converting and strip all gatsby stuff, etc.
         """
         web_publisher = IPCCGatsby()
-        globx = f"{Path(Resources.TEST_RESOURCES_DIR, 'ipcc')}/**/{web_publisher.raw_filename}.html"
+        indir = Resources.TEST_RESOURCES_DIR
+        globx = f"{Path(indir, 'ipcc')}/**/{web_publisher.raw_filename}.html"
+
         infiles = FileLib.posix_glob(globx, recursive=True)
+        outdir = TEMP_DIR
         for infile in infiles:
             html_elem = web_publisher.remove_unnecessary_markup(infile)
-            outfile = Path(Path(infile).parent, f"{DE_GATSBY}.html")
+            # TODO - this is a mess, use Path components
+            inpath = Path(infile).parent
+            rest =  str(inpath)[len(str(indir)) + 1:]
+            print(f"inpath {inpath} || {rest}")
+            outpath = Path(outdir, rest)
+            outfile = Path(outpath, f"{DE_GATSBY}.html")
             HtmlLib.write_html_file(html_elem, outfile, debug=True)
 
     def test_gatsby_add_ids_to_divs_and_paras(self):
@@ -757,11 +763,14 @@ class TestIPCC(AmiAnyTest):
         """
 
         publisher = IPCCGatsby()
-        globx = f"{Path(Resources.TEST_RESOURCES_DIR, 'ipcc')}/**/{publisher.raw_filename}.html"
-        infile = Path(Resources.TEST_RESOURCES_DIR, "ipcc", "wg3", "Chapter03", f"{DE_GATSBY}.html")
-        outfile = Path(Resources.TEST_RESOURCES_DIR, "ipcc", "wg3", "Chapter03", f"{HTML_WITH_IDS}.html")
-        idfile = Path(Resources.TEST_RESOURCES_DIR, "ipcc", "wg3", "Chapter03", f"{ID_LIST}.html")
-        parafile = Path(Resources.TEST_RESOURCES_DIR, "ipcc", "wg3", "Chapter03", f"{PARA_LIST}.html")
+
+        indir = Resources.TEST_RESOURCES_DIR
+        outdir = TEMP_DIR
+        globx = f"{Path(indir, 'ipcc')}/**/{publisher.raw_filename}.html"
+        infile = Path(indir, "ipcc", "wg3", "Chapter03", f"{DE_GATSBY}.html")
+        outfile = Path(outdir, "ipcc", "wg3", "Chapter03", f"{HTML_WITH_IDS}.html")
+        idfile = Path(outdir, "ipcc", "wg3", "Chapter03", f"{ID_LIST}.html")
+        parafile = Path(outdir, "ipcc", "wg3", "Chapter03", f"{PARA_LIST}.html")
 
         publisher.add_para_ids_and_make_id_list(infile, idfile=idfile, outfile=outfile, parafile=parafile)
         assert outfile.exists(), f"{outfile} should exist"
@@ -777,10 +786,12 @@ class TestIPCC(AmiAnyTest):
 
         for rep in ["sr15", "srocc", "srccl"]:
             for chap in ["Chapter02", "Chapter03"]:
-                infile = Path(Resources.TEST_RESOURCES_DIR, "ipcc", rep, chap, f"{DE_WORDPRESS}.html")
-                outfile = Path(Resources.TEST_RESOURCES_DIR, "ipcc", rep, chap, f"{HTML_WITH_IDS}.html")
-                idfile = Path(Resources.TEST_RESOURCES_DIR, "ipcc", rep, chap, f"{ID_LIST}.html")
-                parafile = Path(Resources.TEST_RESOURCES_DIR, "ipcc", rep, chap, f"{PARA_LIST}.html")
+                indir = Resources.TEST_RESOURCES_DIR
+                infile = Path(indir, "ipcc", rep, chap, f"{DE_WORDPRESS}.html")
+                outdir = TEMP_DIR
+                outfile = Path(outdir, "ipcc", rep, chap, f"{HTML_WITH_IDS}.html")
+                idfile = Path(outdir, "ipcc", rep, chap, f"{ID_LIST}.html")
+                parafile = Path(outdir, "ipcc", rep, chap, f"{PARA_LIST}.html")
                 if not infile.exists():
                     print(f"cannot find: {infile}")
                     continue
@@ -792,13 +803,15 @@ class TestIPCC(AmiAnyTest):
     def test_add_ids_to_divs_and_paras_for_all_reports(self):
         publisher = IPCCGatsby()
         top_dir = str(Path(Resources.TEST_RESOURCES_DIR, "ipcc"))
+        outdir = Path(TEMP_DIR, "ipcc")
         globx = f"{top_dir}/**/{DE_GATSBY}.html"
         gatsby_files = FileLib.posix_glob(globx, recursive=True)
         assert len(gatsby_files) >= 1, f"found {len(gatsby_files)} in {globx}"
         for infile in gatsby_files:
-            outfile = str(Path(Path(infile).parent, f"{HTML_WITH_IDS}.html"))
-            idfile = str(Path(Path(infile).parent, f"{ID_LIST}.html"))
-            parafile = str(Path(Path(infile).parent, f"{PARA_LIST}.html"))
+            outdir1 = Path(outdir, Path(infile).parent.stem)
+            outfile = str(Path(outdir1, f"{HTML_WITH_IDS}.html"))
+            idfile = str(Path(outdir1, f"{ID_LIST}.html"))
+            parafile = str(Path(outdir1, f"{PARA_LIST}.html"))
             publisher.add_para_ids_and_make_id_list(infile, idfile=idfile, outfile=outfile, parafile=parafile)
 
     def test_gatsby_mini_pipeline(self):
@@ -838,7 +851,7 @@ class TestIPCC(AmiAnyTest):
         """
         query = "south_asia"
         indir = Path(Resources.TEST_RESOURCES_DIR, 'ipcc')
-        outfile = Path(indir, f"{query}.html")
+        outfile = Path(TEMP_DIR, f"{query}.html")
         debug = False
         globstr = f"{str(indir)}/**/{HTML_WITH_IDS}.html"
         infiles = FileLib.posix_glob(globstr, recursive=True)
@@ -857,10 +870,11 @@ class TestIPCC(AmiAnyTest):
         simple, but requires no server
         """
         query = "south_asia"
-        path = Path(Resources.TEST_RESOURCES_DIR, 'ipcc')
-        outfile = Path(path, f"{query}.html")
+        indir = Path(Resources.TEST_RESOURCES_DIR, 'ipcc')
+        outdir = Path(TEMP_DIR, 'ipcc')
+        outfile = Path(outdir, f"{query}.html")
         debug = False
-        infiles = FileLib.posix_glob(f"{str(path)}/**/{HTML_WITH_IDS}.html", recursive=True)
+        infiles = FileLib.posix_glob(f"{str(indir)}/**/{HTML_WITH_IDS}.html", recursive=True)
         phrases = [
             "bananas",
             "South Asia"
@@ -1274,7 +1288,7 @@ class TestIPCC(AmiAnyTest):
         para_with_ids = lr_html.xpath("//p[@id]")
         assert len(para_with_ids) == 206
         IPCC.find_analyse_curly_refs(para_with_ids)
-        outpath = Path(Resources.TEST_RESOURCES_DIR, IPCC_DIR, CLEANED_CONTENT, SYR,
+        outpath = Path(TEMP_DIR, IPCC_DIR, CLEANED_CONTENT, SYR,
                        SYR_LR, "links.html")
         HtmlLib.write_html_file(lr_html, outpath, debug=True)
 

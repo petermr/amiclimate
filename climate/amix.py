@@ -29,10 +29,8 @@ AMIX_DIR = Path(__file__).parent
 REPO_DIR = AMIX_DIR.parent
 
 
-# class SubParser(Enum):
-#     DICT = "DICT"
 
-logger = logger = FileLib.get_logger(__file__)
+logger = FileLib.get_logger(__file__)
 
 class AMIClimate:
     """ main entry point for running pyami
@@ -87,14 +85,6 @@ class AMIClimate:
     SPECIAL_SYMBOLS = ["_proj"]
     LOGLEVEL = "loglevel"
     PY4AMI = "pyamihtmlx"
-
-    # parsers are these used??
-    # DICT_PARSER = "DICT"
-    # HTML_PARSER = "HTML"
-    # IPCC_PARSER = "IPCC"
-    # PDF_PARSER  = "PDF"
-    # PROJECT_PARSER = "PROJECT"
-    # UNFCCC_PARSER  = "UNFCCC"
 
     logger = logging.getLogger("pyami")
     symbol_ini = None
@@ -356,19 +346,15 @@ class AMIClimate:
         There will be more here
 
          """
-        # print(f"RUN ARGUMENTS on {self} {self.args}")
-        # path workflow
         self.wikipedia_lookup = WikidataLookup()
         self.logger.debug(f"commandline args {self.args}")
         subparser_type = self.args.get("command")
         logging.debug(f" COMMAND: {subparser_type} {self.args}")
 
         subparser_dict = {
-            # "DICT": AmiDictArgs(),
-            # "GUI":  GUIArgs(),
-            "HTML": HTMLArgs(),
+            # "HTML": HTMLArgs(),
             "IPCC": IPCCArgs(),
-            "PDF": PDFArgs(),
+            # "PDF": PDFArgs(),
             "UNFCCC": UNFCCCArgs(),
         }
         abstract_args = subparser_dict.get(subparser_type)
@@ -388,11 +374,6 @@ class AMIClimate:
             self.add_flags()
         if self.CONFIG in self.args and self.args[self.CONFIG] is not None:
             self.apply_config()
-        # if self.EXAMPLES in self.args:
-        #     example_args = self.args[self.EXAMPLES]
-        #     if example_args is not None:
-        #         self.logger.debug(f" examples args: {example_args}")
-        #         Examples(self).run_examples(example_args)
         if self.COPY in self.args and not self.args[self.COPY] is None:
             self.logger.warning(f"COPY {self.args[self.COPY]}")
             self.copy_files()
@@ -401,10 +382,6 @@ class AMIClimate:
                 self.run_project_workflow()
         if self.VERSION in self.args:
             self.print_version()
-        # elif TestFile.TEST in self.args:
-        #     self.logger.warning(f"TEST in **args {self.args}")
-        #     TestFile.run_arg_tests(self.args)
-        # TODO linkup with test arguments
 
     def print_version(self):
         print(f"version {self.version()}")
@@ -477,11 +454,11 @@ class AMIClimate:
         #     self.add_special_keys_to_symbols_ini(key, new_val)
         # return key, new_val
 
-    def get_symbol(self, symb):
-        """gets symbol from pyami symbol table
-
-        """
-        return self.symbol_ini.symbols.get(symb)
+    # def get_symbol(self, symb):
+    #     """gets symbol from pyami symbol table
+    #
+    #     """
+    #     return self.symbol_ini.symbols.get(symb)
 
     def make_substitutions_create_arg_tuples(self, arglist, parser, debug=False):
         """
@@ -597,44 +574,6 @@ class AMIClimate:
         """ project-related commands"""
         print(f"run_proj obsolete")
         return
-        # self.proj = self.args[self.PROJ]
-        # if not self.proj:
-        #     self.logger.error(f"--proj must be given")
-        #     return
-        # self.cproject = CProject(self.proj)
-        #
-        # self.logger.debug(f"{Util.basename(__file__)} proj: {self.proj}")
-        # # if self.args[self.CONFIG]:
-        # #     self.apply_config()
-        # if self.args[self.DELETE]:
-        #     self.delete_files()
-        # if self.args[self.GLOB]:
-        #     self.glob_files()
-        # if self.args[self.SPLIT]:
-        #     self.split(self.args.get(self.SPLIT))
-        # if self.args[self.APPLY]:
-        #     apply_type = self.args.get(self.APPLY)
-        #     converter = Converters.get_converter(apply_type)
-        #     if not converter:
-        #         raise ValueError(f"cannot find converter for {apply_type}")
-        #     previous = False
-        #     if previous:
-        #         self.add_ctree_filenames_to_content_store(apply_type)
-        #         # print(f"content_store {self.content_store.file_dict}")
-        #         self.apply_func(apply_type)
-        #     else:
-        #         converter = Converters.get_converter(apply_type)()
-        #         print(f"{type(converter)}")
-        #         converter.iterate_cproject(cproject=self.proj)
-        #
-        # if self.args[self.FILTER]:
-        #     self.filter_file()
-        # if self.args[self.COMBINE]:
-        #     self.combine_files_to_object()
-        # if self.args[self.OUTFILE]:
-        #     self.write_output()
-        # if self.args[self.ASSERT]:
-        #     self.run_assertions()
 
     def copy_files(self):
         """copies path or directory
@@ -766,11 +705,6 @@ class AMIClimate:
 
     def make_text_sections(self, file):
         print(f"make_test_sections obsolete")
-        # sections = []
-        # with open(file, "r", encoding="utf-8") as f:
-        #     text = f.read()
-        #     sections = TextUtil.split_at_empty_newline(text)
-        #     self.store_or_write_data(file, sections, )
 
     def apply_func(self, apply_type):
         """ """
@@ -847,10 +781,6 @@ class AMIClimate:
 
         elif filterx == self.DICTIONARY and file.endswith(".xml"):
             print(f"dictionary nlot supported yet")
-            # hits = self.apply_dictionary(hit_list, value)
-            # if len(hits) > 0:
-            #     self.logger.debug(f"xpath {type(hits)} {hits}")
-            #     hit_list.extend(hits)
 
         elif filterx == self.LOOKUP:
             self.logger.debug(f"LOOKUP VALUE {value}")
@@ -895,54 +825,33 @@ class AMIClimate:
 
         return (bits[0], bits[1][:-1]) if len(bits) > 1 and bits[1].endswith(")") else None
 
-    # def apply_dictionary(self, hits, name):
-    #
-    #     dictionary_file = self.get_symbol(name)
-    #     if dictionary_file is None:
-    #         dictionary_file = name
-    #     self.ami_dictionary = AmiDictionary.read_dictionary(
-    #         file=dictionary_file)
-    #     new_hits = []
-    #     if self.ami_dictionary is not None:
-    #         for hit in hits:
-    #             entry = self.ami_dictionary.get_lxml_entry(hit.lower())
-    #             if entry is not None:
-    #                 new_hits.append(hit)
-    #                 self.hit_counter[hit] += 1
-    #
-    #     # return [hit for hit in hits if re.match(regex, hit)]
-    #     return new_hits
-
     @classmethod
     def apply_regex(cls, hits, regex):
         return [hit for hit in hits if re.match(regex, hit)]
 
-    def add_ctree_filenames_to_content_store(self, apply_type):
-        print(f"add_ctree_filenames_to_content_store obsolete")
-        # # files = []
-        # ctree_list = self.cproject.get_ctrees()
-        # # TODO add this functionality to enums
-        # subdir_name = None
-        # if apply_type == self.SVG2PAGE:
-        #     subdir_name = CTree.SVG_DIR
-        #     subdir_ext = "svg"
-        #
-        # subdirs = []
-        # subfiles = []
-        # for ctree in ctree_list:
-        #     sd = ctree.get_existing_reserved_directory(subdir_name)
-        #     subdir = CSubDir(sd)
-        #     subdirs.append(subdir)
-        #     globx = "*.svg"
-        #     sf = subdir.get_descendants(globx)
-        #     subfiles.extend(sf)
-        #
-        # print(f"subdirs {len(subdirs)} subfiles {len(subfiles)}")
-        # self.content_store.add_files(subfiles)
+    # def add_ctree_filenames_to_content_store(self, apply_type):
+    #     print(f"add_ctree_filenames_to_content_store obsolete")
+    #     # # files = []
+    #     # ctree_list = self.cproject.get_ctrees()
+    #     # # TODO add this functionality to enums
+    #     # subdir_name = None
+    #     # if apply_type == self.SVG2PAGE:
+    #     #     subdir_name = CTree.SVG_DIR
+    #     #     subdir_ext = "svg"
+    #     #
+    #     # subdirs = []
+    #     # subfiles = []
+    #     # for ctree in ctree_list:
+    #     #     sd = ctree.get_existing_reserved_directory(subdir_name)
+    #     #     subdir = CSubDir(sd)
+    #     #     subdirs.append(subdir)
+    #     #     globx = "*.svg"
+    #     #     sf = subdir.get_descendants(globx)
+    #     #     subfiles.extend(sf)
+    #     #
+    #     # print(f"subdirs {len(subdirs)} subfiles {len(subfiles)}")
+    #     # self.content_store.add_files(subfiles)
 
-    # def get_search_string(self, filter_expr, search_method):
-    #     return filter_expr[len(search_method) + 1:-1]
-    #
     def read_file_content(self, to_str=True):
         """read path content as bytes into file_dict
 
@@ -1176,48 +1085,13 @@ class AMIClimate:
         return version
 
 
-# class ContentStore:
-#     """holds path-related content
+# class Converter(Enum):
 #
-#     replaces earlier pyamihtmlx.file_dict
-#     uses a dict
-#     at presemt the key is the path(name) and the value is either the content or None
-#     """
-#
-#     def __init__(self, pyami):
-#         self.pyami = pyami
-#         self.file_dict = {}
-#
-#     def add_files(self, files, add_contents=False):
-#         for file in files:
-#             self.add_file(file, add_contents)
-#
-#     def add_file(self, file, add_contents=False):
-#         self.file_dict[file] = self.get_contents(file) if add_contents else None
-#
-#     def keys(self):
-#         return self.file_dict.keys() if self.file_dict is not None else None
-#
-#     def get_file_contents(self, file):
-#         """return dictionary or None"""
-#         return self.file_dict.get(file)
-#
-
-class Converter(Enum):
-
-    def __init__(self, converter_class, intype, outtype, indir=".", outdir="."):
-        self.intype = intype
-        self.indir = indir
-        self.outtype = outtype
-        self.outdir = outdir
-
-    # PDF2SVG = (Pdf2SvgConverter, "pdf", "svg", ".", "svg")
-    # PDF2TXT = (PdfReader, Filetype.F_PDF, Filetype.F_TXT, ".", ".")
-    # XML2HTML = (Xml2HtmlConverter, "pdf", "html", ".", ".")
-    # XML2TXT = (Xml2TxtConverter, "xml", "txt", ".", ".")
-    # SVG2PAGE = (Svg2PageConverter, "svg", "html", "svg", "page")
-    # PAGE2SECT = (Page2SectConverter, "html", "html", "page", "sect")
-    # TXT2SENT = (Txt2SentSplitter, Filetype.F_TXT, Filetype.F_TXT, ".", "sent")
+#     def __init__(self, converter_class, intype, outtype, indir=".", outdir="."):
+#         self.intype = intype
+#         self.indir = indir
+#         self.outtype = outtype
+#         self.outdir = outdir
 
 
 def main():
@@ -1225,13 +1099,10 @@ def main():
     """ main entry point for cmdline
 
     """
-    # print(f"PYAMI")
     run_dsl = False
     run_tests = False  # needs re-implementing
 
     run_commands = True
-    #    run_commands = False
-    #    run_tests = True
 
     print(f"\n============== running pyami main ===============\n{sys.argv[1:]}")
     amix = AMIClimate()
