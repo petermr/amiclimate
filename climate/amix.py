@@ -15,22 +15,22 @@ import lxml.etree as etree
 # local
 # from pyamihtmlx.dict_lib import AmiDictionary
 
-from amilib.pdf_args import PDFArgs
-from amilib.html_args import HTMLArgs
 from amilib.file_lib import FileLib
 from amilib.amix import AmiLibArgs
-from climate.ipcc import IPCCArgs
-from climate.un import UNFCCCArgs
 from amilib.util import AmiLogger, Util
 from amilib.wikimedia import WikidataLookup
 from amilib.xml_lib import XmlLib
+
+from climate.ipcc import IPCCArgs
+from climate.un import UNFCCCArgs
+from climate.misclib import MiscUtil
 
 AMIX_DIR = Path(__file__).parent
 REPO_DIR = AMIX_DIR.parent
 
 
+logger = MiscUtil.create_logger(__name__)
 
-logger = FileLib.get_logger(__file__)
 
 class AMIClimate:
     """ main entry point for running pyami

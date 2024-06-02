@@ -20,6 +20,9 @@ from amilib.ami_args import AbstractArgs
 from amilib.xml_lib import HtmlLib, XmlLib
 
 from climate.un import IPCC, GATSBY, DE_GATSBY, WORDPRESS, DE_WORDPRESS, GATSBY_RAW, WORDPRESS_RAW, SPM, TS, LR, AR6_URL
+from climate.misclib import MiscUtil
+
+logger = MiscUtil.create_logger(__name__)
 
 from test.resources import Resources
 
@@ -225,12 +228,21 @@ class IPCCGlossary:
             HtmlLib.write_html_file(self.glossary_elem, self.annotated_glossary_file)
         return self.glossary_elem
 
-    # def create_glossary_elem_x(self):
-    #     if self.glossary_elem is None:
-    #         if self.glossary_html_file:
-    #             self.glossary_elem = lxml.etree.parse(self.glossary_html_file)
-
     def create_glossary_elem(self, fail_on_error=True):
+        """
+        reads self.html_file in memory and creates self.glossary_elem in memory
+        Parameters
+        ----------
+        fail_on_error
+
+        Returns
+        -------
+
+        Exception
+        ---------
+        if self.glossary_elem is None
+
+        """
         if self.glossary_elem is None:
             if self.html_file:
                 self.glossary_elem = self.create_glossary_from_html_file(self.html_file)
@@ -901,7 +913,7 @@ class IPCCArgs(AbstractArgs):
         print(f"indir {indir}, input {input}, output {output}, outdir {outdir}")
         print(f"chap {chapters}, report {reports}")
         if not indir or not chapters or not reports:
-            print(f"Must give indir/reports/chapters")
+            logger.error(f"Must give indir/reports/chapters")
             return
         for report in reports:
             chapters = self.get_chapters()
@@ -1258,6 +1270,9 @@ class IPCCPublisherTool(ABC):
 
 
 class IPCCGatsby(IPCCPublisherTool):
+    """
+    processes IPCC reports is Gatsby format
+    """
 
     def __init__(self, filename=None):
         self.filename = filename if filename else HTML_WITH_IDS

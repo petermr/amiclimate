@@ -76,13 +76,33 @@ logger.setLevel(logging.INFO)
 
 class TestIPCC(AmiAnyTest):
 
+    # ================== helpers ==============
+    def get_report_dict_from_resources(self, report_name):
+        return Resources.WG_REPORTS[report_name]
+
+    # ==================== tests ============
+
     @unittest.skipUnless(True or AmiAnyTest.run_long(), "run occasionally, 1 min")
     def test_pdfplumber_doublecol_create_pages_for_WGs_HACKATHON(self):
         """
+        convert IPCC PDF to Html
+
         creates AmiPDFPlumber and reads double-column pdf and debugs
         This is also an integration/project test
+
+        Detailed console output of all PDF components for 92 pages
         """
 
+        # preselected reports for test
+        """
+            "WG3_CHAP08": {
+            "name": "WG3_Chapter08",
+            "input_pdf": Path(TEST_IPCC_DIR, "wg3", "Chapter08", "fulltext.pdf"),
+            "output_page_dir": Path(TEMP_DIR, "html", "ipcc", "wg3", "Chapter08", "pages"),
+            "footer_height": 30,
+            "header_height": 50
+        },
+"""
         report_names = [
             # "SYR_LR",
             # "SYR_SPM",
@@ -102,25 +122,32 @@ class TestIPCC(AmiAnyTest):
         ]
         # this needs mending
         for report_name in report_names:
+            print(f"REPORT {report_name}")
             report_dict = self.get_report_dict_from_resources(report_name)
+            print(f"report dict {report_dict}")
+            output_page_dir = Path(report_dict.get("output_page_dir"))
+            output_parts = output_page_dir.parts
+            html_idx = output_parts.index("html")
+            wg = output_parts[html_idx+2:][0]
+            chap = output_parts[html_idx+3:][0]
+
             HtmlGenerator.get_pdf_and_parse_to_html(report_dict, report_name)
+            outfile1 = Path(TEMP_DIR, "html", "ipcc", wg, chap, "pages", "page_1.json")
+            assert outfile1.exists(), f"json dict should exist {outfile1}"
 
-    def get_report_dict_from_resources(self, report_name):
-        return Resources.WG_REPORTS[report_name]
-
+    @unittest.skip("NYI")
     def test_html_commands(self):
         """NYI"""
         print(f"directories NYI")
         return
 
         in_dir, session_dir, top_out_dir = self._make_query()
-        outdir =  TEMP_DIR
         AMIClimate().run_command(
             ['IPCC', '--input', "WG3_CHAP08", '--outdir', str(top_out_dir),
              '--operation', UNFCCCArgs.PIPELINE])
 
     @unittest.skipUnless(AmiAnyTest.run_long(), "run occasionally, 1 min")
-    def test_html_commands_shadow(self):
+    def test_html_commands_shadow_local_pdf_to_html(self):
         """shadows above test - mainly development"""
         report_name = "WG3_CHAP08"
         report_dict = self.get_report_dict_from_resources(report_name)
@@ -128,6 +155,7 @@ class TestIPCC(AmiAnyTest):
         outdir = report_dict.get("outdir")
         print(f"outdir {outdir}")
         HtmlGenerator.get_pdf_and_parse_to_html(report_dict, report_name)
+
 
     @unittest.skip("NYI")
     def test_clean_pdf_html_SYR_LR(self):
@@ -613,7 +641,8 @@ class TestIPCC(AmiAnyTest):
         FileLib.delete_directory_contents(wgdir, delete_directory=True)
         assert not wgdir.exists(), f"{wgdir} should have been deleted"
 
-        AMIClimate().run_command(args)
+        ami_climate = AMIClimate()
+        ami_climate.run_command(args)
         assert wgdir.exists(), f"{wgdir} should have been created"
 
         chap1_dir = Path(wgdir, chapters[0])

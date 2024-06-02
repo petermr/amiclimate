@@ -326,6 +326,7 @@ class TestUNFCCC(AmiAnyTest):
             output_dir = session_dir
             SpanMarker.presplit_by_regex_into_sections(infile, output_dir, splitter=splitter)
 
+    @unittest.skip("Not finshed")
     def test_make_nested_divs(self):
         """IMPORTANT not finished"""
         """initial div files are 'flat' - all divs are siblings, Use parents in markup_dict to assemble
