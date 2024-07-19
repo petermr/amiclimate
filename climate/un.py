@@ -802,7 +802,9 @@ class IPCC:
     @classmethod
     def add_hit_with_filename_and_para_id(cls, all_dict, hit_dict, infile, para_phrase_dict):
         """adds non-empty hits in hit_dict and all to all_dict
-        :param all_dict
+        :param all_dict: accumulates para_phrase_dict by infile
+
+        TODO - move to amilib
         """
         item_paras = [item for item in para_phrase_dict.items() if len(item[1]) > 0]
         if len(item_paras) > 0:
@@ -817,7 +819,21 @@ class IPCC:
                     hit_dict[hit].append(url)
 
     @classmethod
-    def create_hit_html(cls, infiles, phrases=None, outfile=None, xpath=None, debug=False):
+    def create_hit_html_with_ids(cls, infiles, phrases=None, outfile=None, xpath=None, debug=False):
+        """
+
+        Parameters
+        ----------
+        infiles list of files to annotate (must contain p[@id])
+        phrases (optional?) list of phrases to search with
+        outfile (HTML) file for list of links to paragraphs
+        xpath (optionaL) sections in target document
+        debug (optional) print filenames, etc.
+
+        Returns html element for list of hit links
+        -------
+
+        """
         all_paras = []
         all_dict = dict()
         hit_dict = defaultdict(list)

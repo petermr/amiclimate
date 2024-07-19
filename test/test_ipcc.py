@@ -1,30 +1,30 @@
+import csv
 import logging
+import os
+import unittest
+from pathlib import Path
 
 import lxml.etree as ET
-from climate.amix import AMIClimate, REPO_DIR
-from climate.ipcc import IPCCWordpress, IPCCGatsby, IPCCChapter, IP_WG1, IPCCArgs, IP_WG2, IP_WG3
-import csv
-import os
-from pathlib import Path
-import unittest
+import pytest
 import requests
-
-from amilib.ami_pdf_libs import AmiPDFPlumber, AmiPlumberJson
+from amilib.ami_dict import AmiDictionary
 from amilib.ami_html import HtmlUtil
+from amilib.ami_pdf_libs import AmiPDFPlumber, AmiPlumberJson
 from amilib.file_lib import FileLib
 from amilib.html_generator import HtmlGenerator
 from amilib.xml_lib import HtmlLib
 from lxml.html import HTMLParser
 
-from climate.un import DECISION_SESS_RE, MARKUP_DICT, INLINE_DICT, UNFCCC, UNFCCCArgs, IPCC, HTML_WITH_IDS_HTML, \
+from climate.amix import AMIClimate, REPO_DIR
+from climate.ipcc import IPCCWordpress, IPCCGatsby, IPCCChapter, IP_WG1, IPCCArgs
+from climate.un import UNFCCCArgs, IPCC, HTML_WITH_IDS_HTML, \
     AR6_URL, TS, GATSBY_RAW, LR, SPM, ANN_IDX, \
-    GATSBY, DE_GATSBY, HTML_WITH_IDS, ID_LIST, WORDPRESS, DE_WORDPRESS, MANUAL, PARA_LIST
+    GATSBY, DE_GATSBY, HTML_WITH_IDS, ID_LIST, WORDPRESS, DE_WORDPRESS, PARA_LIST
 # from pyamihtmlx.util import Util
 # from pyamihtmlx.xml_lib import HtmlLib
 #
 from test.resources import Resources
 from test.test_all import AmiAnyTest
-
 
 # from test.test_all import AmiAnyTest
 
@@ -74,10 +74,12 @@ WG3_URL = AR6_URL + "wg3/"
 logger = FileLib.get_logger(__file__)
 logger.setLevel(logging.INFO)
 
+
 class TestIPCC(AmiAnyTest):
 
     # ================== helpers ==============
-    def get_report_dict_from_resources(self, report_name):
+    @classmethod
+    def get_report_dict_from_resources(cls, report_name):
         return Resources.WG_REPORTS[report_name]
 
     # ==================== tests ============
@@ -128,8 +130,8 @@ class TestIPCC(AmiAnyTest):
             output_page_dir = Path(report_dict.get("output_page_dir"))
             output_parts = output_page_dir.parts
             html_idx = output_parts.index("html")
-            wg = output_parts[html_idx+2:][0]
-            chap = output_parts[html_idx+3:][0]
+            wg = output_parts[html_idx + 2:][0]
+            chap = output_parts[html_idx + 3:][0]
 
             HtmlGenerator.get_pdf_and_parse_to_html(report_dict, report_name)
             outfile1 = Path(TEMP_DIR, "html", "ipcc", wg, chap, "pages", "page_1.json")
@@ -156,7 +158,6 @@ class TestIPCC(AmiAnyTest):
         print(f"outdir {outdir}")
         HtmlGenerator.get_pdf_and_parse_to_html(report_dict, report_name)
 
-
     @unittest.skip("NYI")
     def test_clean_pdf_html_SYR_LR(self):
         """fails as there are no tables! (they are all bitmaps)"""
@@ -164,8 +165,8 @@ class TestIPCC(AmiAnyTest):
             Path(Resources.TEST_IPCC_SROCC, "ts", "fulltext.pdf"),
             Path(Resources.TEST_IPCC_LONGER_REPORT, "fulltext.pdf"),
         ]
-        for inpdf in inpdfs:
-            pass
+        # for inpdf in inpdfs:
+        #     pass
 
     def test_extract_target_section_ids_from_page(self):
         """The IPCC report and many others have hierarchical IDs for sections
@@ -612,10 +613,12 @@ class TestIPCC(AmiAnyTest):
                 print(f"chapter: {chap}")
                 web_publisher.download_clean_chapter(chap, minsize, outdir, report, wg_url)
 
+    @pytest.mark.xfail(reason="bad headless download for some users")
     def test_cmdline_download_wg_reports(self):
         """download WG reports
         output in petermr/semanticClimate
-        FAILS TO DOWNLOAD
+        FAILS TO DOWNLOAD FOR SOME USERS
+        TODO find out why
         """
 
         inurl = f"{AR6_URL}/"
@@ -776,7 +779,7 @@ class TestIPCC(AmiAnyTest):
             html_elem = web_publisher.remove_unnecessary_markup(infile)
             # TODO - this is a mess, use Path components
             inpath = Path(infile).parent
-            rest =  str(inpath)[len(str(indir)) + 1:]
+            rest = str(inpath)[len(str(indir)) + 1:]
             print(f"inpath {inpath} || {rest}")
             outpath = Path(outdir, rest)
             outfile = Path(outpath, f"{DE_GATSBY}.html")
@@ -854,10 +857,7 @@ class TestIPCC(AmiAnyTest):
         simple, but requires no server
         """
         infile = Path(Resources.TEST_RESOURCES_DIR, "ipcc", "wg3", "Chapter03", f"{HTML_WITH_IDS}.html")
-        assert infile.exists(), f"{infile} does not exist"
-        html = ET.parse(str(infile), HTMLParser())
-        paras = HtmlLib.find_paras_with_ids(html)
-        assert len(paras) == 1163
+        paras = self._extract_paras_with_ids(infile, count=1163)
 
         phrases = [
             "greenhouse gas",
@@ -872,6 +872,252 @@ class TestIPCC(AmiAnyTest):
         assert len(keys) == 334
         multi_item_paras = [item for item in para_phrase_dict.items() if len(item[1]) > 1]
         assert len(multi_item_paras) == 60
+
+    def test_search_with_dictionary(self):
+        """
+        uses a simple dictiomation to search WG chapter (wg2/ch03) *html_with_ids)
+
+        Returns
+        -------
+
+
+        """
+        infile = Path(Resources.TEST_RESOURCES_DIR, "ipcc", "wg3", "Chapter03", f"{HTML_WITH_IDS}.html")
+        paras = self._extract_paras_with_ids(infile, count=1163)
+        dictionary = AmiDictionary.create_from_xml_file(
+            Path(Resources.TEST_RESOURCES_DIR, "ipcc", "dictionary", "climate_words.xml"))
+        assert dictionary is not None
+        phrases = dictionary.get_terms()
+        assert len(phrases) == 13
+        para_phrase_dict = HtmlLib.create_para_ohrase_dict(paras, phrases)
+        # pprint.pp(para_phrase_dict)
+        expected = {'executive-summary_p1': {'carbon dioxide removal': True},
+                    'executive-summary_p2': {'greenhouse gas': True},
+                    'executive-summary_p5': {'carbon dioxide removal': True, 'cop26': True},
+                    'executive-summary_p6': {'cop26': True},
+                    'executive-summary_p9': {'methane': True},
+                    '3.1.1_p1': {'greenhouse gas': True},
+                    '3.2.4_p8': {'carbon dioxide removal': True},
+                    '3.2.5_p5': {'carbon dioxide removal': True},
+                    '3.3.1_p1': {'greenhouse gas': True},
+                    '3.3.2.1_p2': {'greenhouse gas': True},
+                    '3.3.2.2_p1': {'greenhouse gas': True, 'carbon dioxide removal': True},
+                    '3.3.2.2_p4': {'methane': True},
+                    '3.3.2.2_p5': {'methane': True},
+                    '3.3.2.3_p1': {'greenhouse gas': True},
+                    '3.3.2.3_p4': {'methane': True},
+                    'box-3.2_p1': {'greenhouse gas': True},
+                    'box-3.4_p12': {'methane': True},
+                    'box-3.4_p16': {'unfccc': True},
+                    'cross-chapter-box-3_p2': {'greenhouse gas': True},
+                    'cross-chapter-box-3_p5': {'methane': True},
+                    'cross-chapter-box-3_p9': {'cop26': True},
+                    'cross-chapter-box-3_p10': {'cop26': True},
+                    'cross-chapter-box-3_p17': {'carbon dioxide removal': True},
+                    'cross-chapter-box-3_p20': {'carbon dioxide removal': True},
+                    'cross-chapter-box-3_p29': {'cop26': True},
+                    'cross-chapter-box-3_p31': {'carbon dioxide removal': True},
+                    '3.4.7_p1': {'methane': True},
+                    '3.4.7_p3': {'carbon dioxide removal': True},
+                    '3.5.1_p4': {'methane': True},
+                    '3.5.2_p1': {'cop26': True},
+                    '3.5.2_p2': {'cop26': True},
+                    '3.5.2_p3': {'cop26': True},
+                    '3.5.2_p4': {'cop26': True},
+                    '3.5.2_p8': {'cop26': True},
+                    '3.5.2.1_p1': {'cop26': True},
+                    '3.5.2.1_p2': {'carbon dioxide removal': True},
+                    '3.5.2.1_p3': {'carbon dioxide removal': True, 'cop26': True},
+                    '3.5.2.2_p4': {'cop26': True},
+                    '3.6.1.1_p5': {'cop26': True},
+                    '3.6.1.1_p9': {'cop26': True},
+                    'box-3.6_p3': {'cop26': True},
+                    '3.7.5.2_p5': {'radiative forcing': True},
+                    'FAQ 3.1_p1': {'carbon dioxide removal': True},
+                    'FAQ 3.2_p1': {'greenhouse gas': True},
+                    'FAQ 3.2_p3': {'carbon dioxide removal': True},
+                    'FAQ 3.3_p1': {'greenhouse gas': True},
+                    'references_p9': {'greenhouse gas': True},
+                    'references_p12': {'greenhouse gas': True},
+                    'references_p28': {'greenhouse gas': True},
+                    'references_p48': {'greenhouse gas': True},
+                    'references_p62': {'carbon dioxide removal': True},
+                    'references_p123': {'methane': True},
+                    'references_p147': {'greenhouse gas': True},
+                    'references_p151': {'greenhouse gas': True},
+                    'references_p167': {'greenhouse gas': True},
+                    'references_p171': {'greenhouse gas': True},
+                    'references_p172': {'radiative forcing': True},
+                    'references_p181': {'carbon dioxide removal': True},
+                    'references_p191': {'greenhouse gas': True},
+                    'references_p208': {'greenhouse gas': True},
+                    'references_p226': {'carbon dioxide removal': True},
+                    'references_p227': {'carbon dioxide removal': True},
+                    'references_p246': {'carbon dioxide removal': True},
+                    'references_p258': {'carbon dioxide removal': True},
+                    'references_p261': {'greenhouse gas': True},
+                    'references_p282': {'methane': True},
+                    'references_p310': {'carbon dioxide removal': True},
+                    'references_p311': {'methane': True},
+                    'references_p313': {'carbon dioxide removal': True},
+                    'references_p315': {'carbon dioxide removal': True},
+                    'references_p326': {'greenhouse gas': True},
+                    'references_p338': {'greenhouse gas': True},
+                    'references_p339': {'greenhouse gas': True},
+                    'references_p346': {'methane': True},
+                    'references_p353': {'greenhouse gas': True},
+                    'references_p357': {'greenhouse gas': True},
+                    'references_p374': {'carbon dioxide removal': True},
+                    'references_p375': {'carbon dioxide removal': True},
+                    'references_p403': {'greenhouse gas': True},
+                    'references_p407': {'carbon dioxide removal': True},
+                    'references_p416': {'radiative forcing': True},
+                    'references_p419': {'greenhouse gas': True},
+                    'references_p443': {'greenhouse gas': True},
+                    'references_p490': {'greenhouse gas': True},
+                    'references_p602': {'methane': True},
+                    'references_p607': {'greenhouse gas': True},
+                    'references_p613': {'carbon dioxide removal': True},
+                    'references_p619': {'greenhouse gas': True},
+                    'references_p630': {'greenhouse gas': True},
+                    'references_p676': {'methane': True},
+                    'references_p682': {'greenhouse gas': True},
+                    'references_p684': {'methane': True},
+                    'references_p708': {'carbon dioxide removal': True},
+                    'references_p715': {'greenhouse gas': True},
+                    'references_p720': {'greenhouse gas': True},
+                    'references_p763': {'radiative forcing': True},
+                    'references_p766': {'greenhouse gas': True},
+                    'references_p767': {'greenhouse gas': True},
+                    'references_p784': {'greenhouse gas': True},
+                    'references_p809': {'permafrost': True}}
+
+        # executive_summary {'carbon dioxide removal': True}}
+        assert expected == para_phrase_dict
+        # does results (para_phrase_dict) contain
+        esp1 = para_phrase_dict.get('executive-summary_p1')
+        assert esp1 == {'carbon dioxide removal': True}
+        print(f"executive_summary {esp1}")
+        keys = para_phrase_dict.keys()
+        assert len(keys) == 100
+
+
+    def test_search_with_dictionary_and_make_links(self):
+        """
+        uses a simple dictiomation to search WG chapter (wg2/ch03) *html_with_ids)
+
+        Returns
+        -------
+
+
+        """
+        infile = Path(Resources.TEST_RESOURCES_DIR, "ipcc", "wg3", "Chapter03", f"{HTML_WITH_IDS}.html")
+        paras = self._extract_paras_with_ids(infile, count=1163)
+        path = Path(Resources.TEST_RESOURCES_DIR, "ipcc", "dictionary", "climate_words.xml")
+        dictionary = AmiDictionary.create_from_xml_file(path)
+        assert dictionary is not None
+        phrases = dictionary.get_terms()
+        # dictionary.location = path
+        assert len(phrases) == 13
+        para_phrase_dict = HtmlLib.create_para_ohrase_dict(paras, phrases, markup=path)
+        html_elem = paras[0].xpath("/html")[0]
+        path1 = Path(Resources.TEMP_DIR, "ipcc", "Chapter03", "markerd_up.html", debug=True)
+        HtmlLib.write_html_file(html_elem, path1, debug=True)
+        # pprint.pp(para_phrase_dict)
+
+        # executive_summary {'carbon dioxide removal': True}}
+        # assert expected == para_phrase_dict
+        # does results (para_phrase_dict) contain
+        esp1 = para_phrase_dict.get('executive-summary_p1')
+        # assert esp1 == {'carbon dioxide removal': True}
+        print(f"executive_summary {esp1}")
+        keys = para_phrase_dict.keys()
+        # assert len(keys) == 100
+
+    def test_search_with_dictionary_and_markup(self):
+        """
+        uses a simple dictiomation to search WG chapter (wg2/ch03) *html_with_ids)
+
+        Returns
+        -------
+
+
+        """
+        infile = Path(Resources.TEST_RESOURCES_DIR, "ipcc", "wg3", "Chapter03", f"{HTML_WITH_IDS}.html")
+        paras = self._extract_paras_with_ids(infile, count=1163)
+        dict_path = Path(Resources.TEST_RESOURCES_DIR, "ipcc", "dictionary", "climate_words_small.xml")
+        dictionary = AmiDictionary.create_from_xml_file(
+            dict_path)
+        dictionary.location_xml = dict_path
+        assert dictionary is not None
+        phrases = dictionary.get_terms()
+        assert len(phrases) == 10
+        para_phrase_dict = HtmlLib.create_para_ohrase_dict(paras, phrases, markup=dictionary.location_html)
+        expected = {'3.2.4_p8': {'carbon dioxide removal': True},
+ '3.2.5_p5': {'carbon dioxide removal': True},
+ '3.3.2.2_p1': {'carbon dioxide removal': True},
+ '3.4.7_p3': {'carbon dioxide removal': True},
+ '3.5.2.1_p2': {'carbon dioxide removal': True},
+ '3.5.2.1_p3': {'carbon dioxide removal': True},
+ '3.7.5.2_p5': {'radiative forcing': True},
+ 'FAQ 3.1_p1': {'carbon dioxide removal': True},
+ 'FAQ 3.2_p3': {'carbon dioxide removal': True},
+ 'box-3.4_p16': {'unfccc': True},
+ 'cross-chapter-box-3_p17': {'carbon dioxide removal': True},
+ 'cross-chapter-box-3_p20': {'carbon dioxide removal': True},
+ 'cross-chapter-box-3_p31': {'carbon dioxide removal': True},
+ 'executive-summary_p1': {'carbon dioxide removal': True},
+ 'executive-summary_p5': {'carbon dioxide removal': True},
+ 'references_p172': {'radiative forcing': True},
+ 'references_p181': {'carbon dioxide removal': True},
+ 'references_p226': {'carbon dioxide removal': True},
+ 'references_p227': {'carbon dioxide removal': True},
+ 'references_p246': {'carbon dioxide removal': True},
+ 'references_p258': {'carbon dioxide removal': True},
+ 'references_p310': {'carbon dioxide removal': True},
+ 'references_p313': {'carbon dioxide removal': True},
+ 'references_p315': {'carbon dioxide removal': True},
+ 'references_p374': {'carbon dioxide removal': True},
+ 'references_p375': {'carbon dioxide removal': True},
+ 'references_p407': {'carbon dioxide removal': True},
+ 'references_p416': {'radiative forcing': True},
+ 'references_p613': {'carbon dioxide removal': True},
+ 'references_p62': {'carbon dioxide removal': True},
+ 'references_p708': {'carbon dioxide removal': True},
+ 'references_p763': {'radiative forcing': True},
+ 'references_p809': {'permafrost': True}}
+
+        # executive_summary {'carbon dioxide removal': True}}
+        # assert expected == para_phrase_dict
+        # does results (para_phrase_dict) contain
+        # esp1 = para_phrase_dict.get('executive-summary_p1')
+        # assert esp1 == {'carbon dioxide removal': True}
+        # print(f"executive_summary {esp1}")
+        # keys = para_phrase_dict.keys()
+        # assert len(keys) == 33
+
+        html_elem = paras[0].xpath("/html")[0]
+        chap3_outfile = Path(Resources.TEMP_DIR, "ipcc", "Chapter03", f"marked.html")
+        HtmlLib.write_html_file(html_elem, chap3_outfile, debug=True)
+
+    def _extract_paras_with_ids(self, infile, count=-1):
+        """
+
+        Parameters
+        ----------
+        infile html file with p[@id]
+        count number of paragraphs with @id (default -1) . if count >= 0, asserts number flound == count
+
+        Returns
+        -------
+
+        """
+        assert infile.exists(), f"{infile} does not exist"
+        html = ET.parse(str(infile), HTMLParser())
+        paras = HtmlLib.find_paras_with_ids(html)
+        if count >= 0:
+            assert len(paras) == count
+        return paras
 
     def test_search_all_chapters_with_query_words(self, outfile=None):
         """
@@ -889,7 +1135,7 @@ class TestIPCC(AmiAnyTest):
             "bananas",
             "South Asia",
         ]
-        html1 = IPCC.create_hit_html(infiles, phrases=phrases, outfile=outfile, debug=debug)
+        html1 = IPCC.create_hit_html_with_ids(infiles, phrases=phrases, outfile=outfile, debug=debug)
         assert html1 is not None
         assert len(html1.xpath("//p")) > 0
 
@@ -902,13 +1148,14 @@ class TestIPCC(AmiAnyTest):
         indir = Path(Resources.TEST_RESOURCES_DIR, 'ipcc')
         outdir = Path(TEMP_DIR, 'ipcc')
         outfile = Path(outdir, f"{query}.html")
-        debug = False
+        debug = True
         infiles = FileLib.posix_glob(f"{str(indir)}/**/{HTML_WITH_IDS}.html", recursive=True)
         phrases = [
             "bananas",
             "South Asia"
         ]
-        html1 = IPCC.create_hit_html(infiles, phrases=phrases, outfile=outfile, debug=debug)
+        html1 = IPCC.create_hit_html_with_ids(infiles, phrases=phrases, outfile=outfile, debug=debug)
+        assert outfile.exists()
 
     def test_arguments_no_action(self):
 
@@ -1064,10 +1311,10 @@ class TestIPCC(AmiAnyTest):
             ['IPCC', '--indir', "_IPCC_REPORTS", '--input', "_HTML_IDS", '--query', "methane", '--outdir', "_QUERY_OUT",
              "--output", output, '--xpath',
              "_NOREFS"])
-        self.check_output_tree(output, expected=[60,300], xpath=".//a[@href]")
+        self.check_output_tree(output, expected=[60, 300], xpath=".//a[@href]")
 
-    def test_commandline_search_with_wildcards_and_join_indir(self):
-        """generate inpout files """
+    def test_commandline_search_with_filename_wildcards_and_join_indir(self):
+        """generate input files """
 
         # run args
         query_name = "methane"
@@ -1138,7 +1385,7 @@ class TestIPCC(AmiAnyTest):
         reports = [f for f in list(indir_path.glob("*/")) if f.is_dir()]
         report_stems = [Path(f).stem for f in reports]
         assert len(report_stems) >= 1
-        reports_set = set(["sr15", "srocc", "srccl", "syr", "wg1", "wg2", "wg3"])
+        reports_set = {"sr15", "srocc", "srccl", "syr", "wg1", "wg2", "wg3"}
         assert reports_set.issubset(set(report_stems))
 
     def test_ipcc_syr_contents(self):
@@ -1310,9 +1557,15 @@ class TestIPCC(AmiAnyTest):
         nodes. Somes the nodes are labelled "refs", sometimes not. The safest way is to try to
         locate the actual text and find the relevant node.
         """
+        """
+        """
+
 
         syr_lr_content = Path(Resources.TEST_RESOURCES_DIR, IPCC_DIR, CLEANED_CONTENT, SYR,
                               SYR_LR, HTML_WITH_IDS_HTML)
+
+        print(f"not sure this works")
+        print(f"test_add_ipcc_hyperlinks analysing curlies in {syr_lr_content}")
         lr_html = ET.parse(str(syr_lr_content), HTMLParser())
         para_with_ids = lr_html.xpath("//p[@id]")
         assert len(para_with_ids) == 206
@@ -1320,6 +1573,7 @@ class TestIPCC(AmiAnyTest):
         outpath = Path(TEMP_DIR, IPCC_DIR, CLEANED_CONTENT, SYR,
                        SYR_LR, "links.html")
         HtmlLib.write_html_file(lr_html, outpath, debug=True)
+        assert outpath.exists(), f"file should exist {outpath}"
 
     # ========= helpers ============
     def check_output_tree(self, output, expected=None, xpath=None):
@@ -1329,10 +1583,7 @@ class TestIPCC(AmiAnyTest):
         assert html_tree is not None, f"html_tree is None"
         if expected:
             pp = len(html_tree.xpath(xpath))
-            if type(expected) is list and len(expected) ==  2:
+            if type(expected) is list and len(expected) == 2:
                 assert expected[0] <= pp <= expected[1], f"found {pp} elements in {output}, expected {expected}"
             else:
                 assert pp == expected, f"found {pp} elements in {output}"
-
-
-
