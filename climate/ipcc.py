@@ -17,16 +17,17 @@ from amilib.ami_html import URLCache, HtmlUtil, H_DIV, H_A, HtmlStyle, A_NAME, A
 from amilib.file_lib import FileLib
 from amilib.util import Util
 from amilib.ami_args import AbstractArgs
-from amilib.xml_lib import HtmlLib, XmlLib
+from amilib.xml_lib import XmlLib
+from amilib.ami_html import HtmlLib
 
 from climate.un import IPCC, GATSBY, DE_GATSBY, WORDPRESS, DE_WORDPRESS, GATSBY_RAW, WORDPRESS_RAW, SPM, TS, LR, AR6_URL
 from climate.misclib import MiscUtil
 
-logger = MiscUtil.create_logger(__name__)
+# logger = MiscUtil.create_logger(__name__)
 
 from test.resources import Resources
 
-logger = logging.getLogger(__file__)
+logger = Util.get_logger(__name__)
 
 IPCC_CHAP_TOP_REC = re.compile(""
                                "(Chapter\\s?\\d\\d?\\s?:.*$)|"

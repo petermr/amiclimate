@@ -17,7 +17,7 @@ import lxml.etree as etree
 
 from amilib.file_lib import FileLib
 from amilib.amix import AmiLibArgs
-from amilib.util import AmiLogger, Util
+from amilib.util import Util
 from amilib.wikimedia import WikidataLookup
 from amilib.xml_lib import XmlLib
 
@@ -29,7 +29,8 @@ AMIX_DIR = Path(__file__).parent
 REPO_DIR = AMIX_DIR.parent
 
 
-logger = MiscUtil.create_logger(__name__)
+# logger = MiscUtil.create_logger(__name__)
+logger = Util.get_logger(__name__)
 
 
 class AMIClimate:
@@ -360,7 +361,7 @@ class AMIClimate:
         abstract_args = subparser_dict.get(subparser_type)
 
         if abstract_args:
-            abstract_args.parse_and_process1(self.args)
+            abstract_args._parse_and_process1(self.args)
         else:
             self.run_core_mathods()
         return " ".join(self.args)

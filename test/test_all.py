@@ -9,6 +9,7 @@ import unittest
 from amilib.util import Util
 
 from test.resources import Resources
+logger = Util.get_logger(__name__)
 
 
 class AmiAnyTest(unittest.TestCase):

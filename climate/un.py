@@ -13,7 +13,9 @@ import lxml.etree as ET
 from amilib.amidriver import AmiDriver
 from amilib.file_lib import FileLib
 from amilib.ami_args import AbstractArgs
-from amilib.xml_lib import HtmlLib, XmlLib
+from amilib.util import Util
+from amilib.xml_lib import XmlLib
+from amilib.ami_html import HtmlLib
 from amilib.ami_html import HtmlUtil
 from lxml.etree import _Element, _ElementUnicodeResult
 from lxml.html import HTMLParser, HtmlComment
@@ -296,7 +298,7 @@ WG1_URL = AR6_URL + "wg1/"
 WG2_URL = AR6_URL + "wg2/"
 WG3_URL = AR6_URL + "wg3/"
 
-logger = logging.getLogger(__file__)
+logger = Util.get_logger(__name__)
 
 
 def save_args_to_global(kwargs_dict, overwrite=True):
@@ -846,7 +848,7 @@ class IPCC:
             all_paras.extend(paras)
 
             # this does the search
-            para_phrase_dict = HtmlLib.create_para_ohrase_dict(paras, phrases)
+            para_phrase_dict = HtmlLib.search_phrases_in_paragraphs(paras, phrases)
             if len(para_phrase_dict) > 0:
                 if debug:
                     print(f"para_phrase_dict {para_phrase_dict}")

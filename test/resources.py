@@ -5,7 +5,9 @@ import logging
 import os
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
+from amilib.util import Util
+
+logger = Util.get_logger(__name__)
 
 
 class Resources:
@@ -27,7 +29,7 @@ class Resources:
     assert TEST_RESOURCES_DIR.exists(), f"dir exists {TEST_RESOURCES_DIR}"
     assert TEST_RESOURCES_DIR.is_dir(), f"file exists {TEST_RESOURCES_DIR}"
 
-    # svg test data
+    # svg test datalogger = Util.get_logger(__name__)
     CLIMATE_10_PROJ = "climate10_proj"
     TEST_CLIMATE_10_PROJ_DIR = Path(TEST_RESOURCES_DIR, CLIMATE_10_PROJ)
     Path(TEST_CLIMATE_10_PROJ_DIR).mkdir(parents=True, exist_ok=True)

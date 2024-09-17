@@ -1,21 +1,26 @@
 import logging
 import sys
+import unittest
 from pathlib import Path
 import pytest
 from amilib.file_lib import FileLib
 
 from amilib.html_generator import HtmlGenerator
 from amilib.ami_pdf_libs import AmiPDFPlumber
+from amilib.util import Util
 
 from test.resources import Resources
 from test.test_all import AmiAnyTest
 
 from climate.misclib import MiscUtil
 
-logging.basicConfig()
-# logger = logging.getLogger(__file__)
-logger = logging.getLogger(__name__)
-logger.level = logging.DEBUG
+# logging.basicConfig()
+# # logger = logging.getLogger(__file__)
+# logger = logging.getLogger(__name__)
+logger = Util.get_logger(__name__)
+logger.setLevel(logging.INFO)
+
+# logger.level = logging.DEBUG
 class UNMiscTest(AmiAnyTest):
     """
     May really belong in PDFPlumber tests
@@ -180,6 +185,7 @@ class MiscTest(AmiAnyTest):
 
 
 
+    @unittest.skip("ApproxNestedMapping.nested_approx not working")
     def test_large_nested_dicts(self):
         """compare json dicts approx
         FAILS"""

@@ -12,7 +12,8 @@ from amilib.ami_html import HtmlUtil
 from amilib.ami_pdf_libs import AmiPDFPlumber, AmiPlumberJson
 from amilib.file_lib import FileLib
 from amilib.html_generator import HtmlGenerator
-from amilib.xml_lib import HtmlLib
+from amilib.util import Util
+from amilib.ami_html import HtmlLib
 from lxml.html import HTMLParser
 
 from climate.amix import AMIClimate, REPO_DIR
@@ -71,7 +72,9 @@ WG3_URL = AR6_URL + "wg3/"
 
 # SC_TEST_DIR = Path(OUT_DIR_TOP, "ipcc", "ar6", "test")
 
-logger = FileLib.get_logger(__file__)
+# logger = FileLib.get_logger(__file__)
+# logger.setLevel(logging.INFO)
+logger = Util.get_logger(__name__)
 logger.setLevel(logging.INFO)
 
 
@@ -865,7 +868,7 @@ class TestIPCC(AmiAnyTest):
             "emissions",
             "global warming",
         ]
-        para_phrase_dict = HtmlLib.create_para_ohrase_dict(paras, phrases)
+        para_phrase_dict = HtmlLib.search_phrases_in_paragraphs(paras, phrases)
 
         print(f"{para_phrase_dict.get('executive-summary_p1')}")
         keys = para_phrase_dict.keys()
@@ -889,7 +892,7 @@ class TestIPCC(AmiAnyTest):
         assert dictionary is not None
         phrases = dictionary.get_terms()
         assert len(phrases) == 13
-        para_phrase_dict = HtmlLib.create_para_ohrase_dict(paras, phrases)
+        para_phrase_dict = HtmlLib.search_phrases_in_paragraphs(paras, phrases)
         # pprint.pp(para_phrase_dict)
         expected = {'executive-summary_p1': {'carbon dioxide removal': True},
                     'executive-summary_p2': {'greenhouse gas': True},
@@ -1019,7 +1022,7 @@ class TestIPCC(AmiAnyTest):
         phrases = dictionary.get_terms()
         # dictionary.location = path
         assert len(phrases) == 13
-        para_phrase_dict = HtmlLib.create_para_ohrase_dict(paras, phrases, markup=path)
+        para_phrase_dict = HtmlLib.search_phrases_in_paragraphs(paras, phrases, markup=path)
         html_elem = paras[0].xpath("/html")[0]
         path1 = Path(Resources.TEMP_DIR, "ipcc", "Chapter03", "markerd_up.html", debug=True)
         HtmlLib.write_html_file(html_elem, path1, debug=True)
@@ -1052,7 +1055,7 @@ class TestIPCC(AmiAnyTest):
         assert dictionary is not None
         phrases = dictionary.get_terms()
         assert len(phrases) == 10
-        para_phrase_dict = HtmlLib.create_para_ohrase_dict(paras, phrases, markup=dictionary.location_html)
+        para_phrase_dict = HtmlLib.search_phrases_in_paragraphs(paras, phrases, markup=dictionary.location_xml)
         expected = {'3.2.4_p8': {'carbon dioxide removal': True},
  '3.2.5_p5': {'carbon dioxide removal': True},
  '3.3.2.2_p1': {'carbon dioxide removal': True},

@@ -9,7 +9,7 @@ from amilib.html_generator import HtmlGenerator
 #
 from amilib.html_marker import SpanMarker, HtmlPipeline
 from amilib.util import Util
-from amilib.xml_lib import HtmlLib
+from amilib.ami_html import HtmlLib
 
 from climate.amix import AMIClimate, REPO_DIR
 from climate.un import DECISION_SESS_RE, MARKUP_DICT, INLINE_DICT, UNFCCC, UNFCCCArgs
@@ -59,8 +59,10 @@ WG3_URL = AR6_URL + "wg3/"
 
 # SC_TEST_DIR = Path(OUT_DIR_TOP, "ipcc", "ar6", "test")
 
-logger = logging.getLogger(__file__)
-logger.setLevel(logging.WARNING)
+# logger = logging.getLogger(__file__)
+# logger.setLevel(logging.WARNING)
+logger = Util.get_logger(__name__)
+logger.setLevel(logging.INFO)
 
 
 class TestUNFCCC(AmiAnyTest):
@@ -259,6 +261,7 @@ class TestUNFCCC(AmiAnyTest):
         )
         assert outfile.exists()
         html_out_elem = HtmlLib.parse_html(outfile)
+        assert html_out_elem is not None, f"html_out_elem from {outfile} should not be None"
         ahrefs = html_out_elem.xpath(".//a/@href")
         print(f"hrefs: {len(ahrefs)}")
 

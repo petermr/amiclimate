@@ -7,7 +7,10 @@ import logging
 from pathlib import Path
 import json
 
+from amilib.util import Util
+
 # from climate.misclib import MiscUtil
+logger = Util.get_logger(__name__)
 
 
 class NewFileLib:
