@@ -1392,7 +1392,7 @@ class TestIPCC(AmiAnyTest):
         assert reports_set.issubset(set(report_stems))
 
     def test_ipcc_syr_contents(self):
-        """analyses contents for IPCC syr
+        """analyses contents for IPCC SYR
         """
         syr_path = Path(Resources.TEST_RESOURCES_DIR, 'ipcc', 'cleaned_content', 'syr')
         assert syr_path.exists()

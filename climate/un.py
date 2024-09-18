@@ -13,6 +13,7 @@ import lxml.etree as ET
 from amilib.amidriver import AmiDriver
 from amilib.file_lib import FileLib
 from amilib.ami_args import AbstractArgs
+from amilib.html_marker import HtmlPipeline
 from amilib.util import Util
 from amilib.xml_lib import XmlLib
 from amilib.ami_html import HtmlLib
