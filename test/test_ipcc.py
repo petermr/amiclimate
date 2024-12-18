@@ -83,6 +83,9 @@ class TestIPCC(AmiAnyTest):
     # ================== helpers ==============
     @classmethod
     def get_report_dict_from_resources(cls, report_name):
+        """
+        test_support
+        """
         return Resources.WG_REPORTS[report_name]
 
     # ==================== tests ============
@@ -90,6 +93,8 @@ class TestIPCC(AmiAnyTest):
     @unittest.skipUnless(True or AmiAnyTest.run_long(), "run occasionally, 1 min")
     def test_pdfplumber_doublecol_create_pages_for_WGs_HACKATHON(self):
         """
+        DOWNLOAD PDF
+        CONVERT PDF
         convert IPCC PDF to Html
 
         creates AmiPDFPlumber and reads double-column pdf and debugs
@@ -140,20 +145,13 @@ class TestIPCC(AmiAnyTest):
             outfile1 = Path(TEMP_DIR, "html", "ipcc", wg, chap, "pages", "page_1.json")
             assert outfile1.exists(), f"json dict should exist {outfile1}"
 
-    @unittest.skip("NYI")
-    def test_html_commands(self):
-        """NYI"""
-        print(f"directories NYI")
-        return
-
-        in_dir, session_dir, top_out_dir = self._make_query()
-        AMIClimate().run_command(
-            ['IPCC', '--input', "WG3_CHAP08", '--outdir', str(top_out_dir),
-             '--operation', UNFCCCArgs.PIPELINE])
 
     @unittest.skipUnless(AmiAnyTest.run_long(), "run occasionally, 1 min")
     def test_html_commands_shadow_local_pdf_to_html(self):
-        """shadows above test - mainly development"""
+        """
+        CONVERT PDF
+        shadows above test - mainly development
+        """
         report_name = "WG3_CHAP08"
         report_dict = self.get_report_dict_from_resources(report_name)
         print(f"report_dict {report_dict}")
@@ -161,18 +159,11 @@ class TestIPCC(AmiAnyTest):
         print(f"outdir {outdir}")
         HtmlGenerator.get_pdf_and_parse_to_html(report_dict, report_name)
 
-    @unittest.skip("NYI")
-    def test_clean_pdf_html_SYR_LR(self):
-        """fails as there are no tables! (they are all bitmaps)"""
-        inpdfs = [
-            Path(Resources.TEST_IPCC_SROCC, "ts", "fulltext.pdf"),
-            Path(Resources.TEST_IPCC_LONGER_REPORT, "fulltext.pdf"),
-        ]
-        # for inpdf in inpdfs:
-        #     pass
-
     def test_extract_target_section_ids_from_page(self):
-        """The IPCC report and many others have hierarchical IDs for sections
+        """
+        INPUT PDF
+        PARSE HTML
+        The IPCC report and many others have hierarchical IDs for sections
         These are output in divs and spans
         test/resources/ipcc/wg2/spm/page_9.html
         e.g. <div>
@@ -358,29 +349,6 @@ class TestIPCC(AmiAnyTest):
         no_decorations_file = Path(expand_file.parent, "no_decorations.html")
         HtmlLib.write_html_file(no_decorations, no_decorations_file, debug=True)
 
-    def test_download_sr15_chapter1_and_strip_non_content(self):
-        """read single chapter from "view" button and convert to raw semantic HTML
-        Tests the encoding
-        """
-        debug = False
-        rep = "sr15"
-        chapter_no = 1
-        chapter_no_out = "01"
-        url = f"https://www.ipcc.ch/{rep}/chapter/chapter-{chapter_no}/"
-        html_tree = HtmlLib.retrieve_with_useragent_parse_html(url, debug=debug)
-        title = html_tree.xpath('/html/head/title')[0].text
-        assert title == "Chapter 1 — Global Warming of 1.5 ºC"
-        p0text = html_tree.xpath('//p')[0].text
-        assert p0text[:41] == "Understanding the impacts of 1.5°C global"
-        IPCCChapter.atrip_wordpress(html_tree)
-        HtmlLib.write_html_file(html_tree,
-                                Path(Resources.TEMP_DIR, "ipcc", rep, f"Chapter{chapter_no_out}", f"{WORDPRESS}.html"),
-                                debug=True)
-        IPCC.add_styles_to_head(HtmlLib.get_head(html_tree))
-        HtmlLib.write_html_file(html_tree,
-                                Path(Resources.TEMP_DIR, "ipcc", rep, f"Chapter{chapter_no_out}",
-                                     f"{WORDPRESS}_styles.html"),
-                                debug=True)
 
     @unittest.skipUnless(AmiAnyTest.run_long(), "run occasionally")
     def test_download_special_reports_and_strip_non_content(self):
@@ -1577,6 +1545,36 @@ class TestIPCC(AmiAnyTest):
                        SYR_LR, "links.html")
         HtmlLib.write_html_file(lr_html, outpath, debug=True)
         assert outpath.exists(), f"file should exist {outpath}"
+
+class TestIPCCDownloadHTML(AmiAnyTest):
+
+    """
+    tests primarily concerned with downloading HTML
+    """
+
+    def test_download_sr15_chapter1_and_strip_non_content(self):
+        """read single chapter from "view" button and convert to raw semantic HTML
+        Tests the encoding
+        """
+        debug = False
+        rep = "sr15"
+        chapter_no = 1
+        chapter_no_out = "01"
+        url = f"https://www.ipcc.ch/{rep}/chapter/chapter-{chapter_no}/"
+        html_tree = HtmlLib.retrieve_with_useragent_parse_html(url, debug=debug)
+        title = html_tree.xpath('/html/head/title')[0].text
+        assert title == "Chapter 1 — Global Warming of 1.5 ºC"
+        p0text = html_tree.xpath('//p')[0].text
+        assert p0text[:41] == "Understanding the impacts of 1.5°C global"
+        IPCCChapter.atrip_wordpress(html_tree)
+        HtmlLib.write_html_file(html_tree,
+                                Path(Resources.TEMP_DIR, "ipcc", rep, f"Chapter{chapter_no_out}", f"{WORDPRESS}.html"),
+                                debug=True)
+        IPCC.add_styles_to_head(HtmlLib.get_head(html_tree))
+        HtmlLib.write_html_file(html_tree,
+                                Path(Resources.TEMP_DIR, "ipcc", rep, f"Chapter{chapter_no_out}",
+                                     f"{WORDPRESS}_styles.html"),
+                                debug=True)
 
     # ========= helpers ============
     def check_output_tree(self, output, expected=None, xpath=None):

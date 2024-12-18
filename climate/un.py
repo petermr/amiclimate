@@ -407,7 +407,7 @@ class UNFCCCArgs(AbstractArgs):
         )
         self.parser.formatter_class = argparse.RawDescriptionHelpFormatter
 
-        super().add_argumants()
+        super().add_arguments()
 
         self.parser.add_argument(f"--{self.SESSION_DIR}", nargs="+",
                                  help=self.SESSION_HELP)

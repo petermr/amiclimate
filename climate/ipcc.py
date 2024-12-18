@@ -614,7 +614,7 @@ class IPCCArgs(AbstractArgs):
             f''
 
         )
-        super().add_argumants()
+        super().add_arguments()
 
         self.parser.formatter_class = argparse.RawDescriptionHelpFormatter
         INPUT_HELP = f"input from:\n" \
